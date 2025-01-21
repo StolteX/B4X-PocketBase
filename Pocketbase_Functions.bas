@@ -37,6 +37,29 @@ Public Sub GetFilename(fullpath As String) As String
 	Return fullpath.SubString(fullpath.LastIndexOf("/") + 1)
 End Sub
 
+'ISO8601UTC
+Public Sub GetISO8601UTC(Ticks As Long) As String
+	
+	Dim prevDateFormat As String = DateTime.DateFormat
+	Dim prevTimeFormat As String = DateTime.TimeFormat
+	
+	Dim prevTimeZone As Int = DateTime.GetTimeZoneOffsetAt(Ticks)
+	DateTime.SetTimeZone(0)
+    
+	Dim utcTimestamp As Long = Ticks
+
+	DateTime.DateFormat = "yyyy-MM-dd"
+	DateTime.TimeFormat = "HH:mm:ss"
+
+	Dim formattedDate As String = DateTime.Date(utcTimestamp) & "T" & DateTime.Time(utcTimestamp) & ".000Z"
+
+	DateTime.SetTimeZone(prevTimeZone)
+	DateTime.DateFormat = prevDateFormat
+	DateTime.TimeFormat = prevTimeFormat
+
+	Return formattedDate
+End Sub
+
 Public Sub ParseDateTime(DateString As String) As Long
 	If DateString = "" Or DateString = "null" Or DateString = Null Then Return 0
 	DateString=DateString.Replace("T"," ")

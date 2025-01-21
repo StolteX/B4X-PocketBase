@@ -9,6 +9,7 @@ Sub Class_Globals
 	
 	Private m_TableName As String
 	Private m_ColumnValue As Map
+	Private m_CustomParameters As String = ""
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -26,6 +27,23 @@ Public Sub Update(ColumnValue As Map) As Pocketbase_DatabaseUpdate
 	m_ColumnValue = ColumnValue
 	Return Me
 End Sub
+
+#Region CustomParameters
+
+'Auto expand record relations.
+Public Sub Parameter_Expand(Expand As String) As Pocketbase_DatabaseUpdate
+	m_CustomParameters = m_CustomParameters & $"&expand=${Expand}"$
+	Return Me
+End Sub
+
+'Comma separated string of the fields to return in the JSON response (by default returns all fields).
+'<code>CustomQuery.Parameter_Fields("Task_Name,Task_CompletedAt")</code>
+Public Sub Parameter_Fields(Fields As String) As Pocketbase_DatabaseUpdate
+	m_CustomParameters = m_CustomParameters & $"&fields=${Fields}"$
+	Return Me
+End Sub
+
+#End Region
 
 Public Sub Execute(RecordId As String) As ResumableSub
 	
@@ -45,7 +63,8 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	End If
 	
 	Dim url As String = ""
-	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records/${RecordId}"$
+	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
+	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records/${RecordId}${m_CustomParameters}"$
 
 	Dim jsn As JSONGenerator
 	jsn.Initialize(m_ColumnValue)

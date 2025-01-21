@@ -21,26 +21,26 @@ Private Sub Class_Globals
 	
 	'************OAuth*********
 	
-	Private CurrentClientId As String
-	Private CurrentProvider As String
-	Private packageName As String 'ignore
-	#if B4A
-	Private LastIntent As Intent
-	#end if
-	
-	#if B4J
-	Private server As ServerSocket
-	#If UI
-	Private fx As JFX
-	#End If
-	Private port As Int = 3000
-	Private astream As AsyncStreams
-	#Else If B4I
-	Private dele_gate As Object 'ignore
-	Public btn As B4XView
-	#End if
-	
-	Private m_ClientSecret As String
+'	Private CurrentClientId As String
+'	Private CurrentProvider As String
+'	Private packageName As String 'ignore
+'	#if B4A
+'	Private LastIntent As Intent
+'	#end if
+'	
+'	#if B4J
+'	Private server As ServerSocket
+'	#If UI
+'	Private fx As JFX
+'	#End If
+'	Private port As Int = 3000
+'	Private astream As AsyncStreams
+'	#Else If B4I
+'	Private dele_gate As Object 'ignore
+'	Public btn As B4XView
+'	#End if
+'	
+'	Private m_ClientSecret As String
 	
 	'*********************
 	
@@ -120,53 +120,23 @@ Public Sub SaveToken
 	raf.Close
 End Sub
 
-'User tokens are removed from the device
-'After calling log out, all interactions using the Pocketbase B4X client will be "anonymous".
-'<code>
-'	Wait For (xPocketbase.Auth.Logout) Complete (Result As PocketbaseError)
-'	If Result.Success Then
-'		Log("User successfully logged out")
-'	Else
-'		Log("Error: " & Result.ErrorMessage)
-'	End If
-'</code>
+'User tokens and infos are removed from the device
 Public Sub Logout As ResumableSub
 	
-'	Dim DatabaseError As PocketbaseError
-'	DatabaseError.Initialize
-'	
-'	Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
-'	If AccessToken = "" Then
-'		DatabaseError.StatusCode = 401
-'		DatabaseError.ErrorMessage = "Unauthorized"
-'		Return DatabaseError
-'	End If
-'	
-'	Dim url As String = $"${m_Pocketbase.URL}/auth/v1/logout"$
-'	
-'	Dim json As JSONGenerator
-'	json.Initialize(CreateMap("refresh_token":sti_Token.RefreshToken))
-'	
-'	Dim j As HttpJob : j.Initialize("",Me)
-'	j.PostString(url,json.ToString)
-'	j.GetRequest.SetContentType("application/json")
-'	j.GetRequest.SetHeader("apikey",m_Pocketbase.ApiKey)
-'	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
-'	
-'	Wait For (j) JobDone(j As HttpJob)
-'	
-'	If j.Success Then
-'			
-'	Else
-'		DatabaseError.StatusCode = j.Response.StatusCode
-'		DatabaseError.ErrorMessage = j.ErrorMessage
-'	End If
-'	
-'	If m_Pocketbase.LogEvents Then Log("PocketbaseAuth: Token reset!!!")
-'	sti_Token.Valid = False
-'	SaveToken
-'	AuthStateChange("signedOut")
-'	Return DatabaseError
+	Dim DatabaseError As PocketbaseError
+	DatabaseError.Initialize
+	
+	If m_Pocketbase.LogEvents Then Log("PocketbaseAuth: Token reset!!!")
+	sti_Token.Valid = False
+	sti_Token.AccessExpiry = 0
+	sti_Token.AccessToken = ""
+	sti_Token.Email = ""
+	sti_Token.Id = 0
+	sti_Token.TokenType = ""
+	SaveToken
+	m_User.Initialize
+	AuthStateChange("signedOut")
+	Return DatabaseError
 	
 End Sub
 
@@ -270,7 +240,7 @@ Public Sub SignUp(Email As String,Password As String,PasswordConfirm As String,O
 		m_User = FillUserObject(User,m_ResultMap)
 		m_User.Email = Email
 		m_User.Error = DatabaseError
-		AuthStateChange("signedIn")
+		AuthStateChange("registered")
 	Else
 		m_User.Error = DatabaseError
 	End If
@@ -278,11 +248,7 @@ Public Sub SignUp(Email As String,Password As String,PasswordConfirm As String,O
 	Return m_User
 	
 		#IF Documentation
-		idToken - A Firebase Auth ID token for the newly created user.
-		email - The email for the newly created user.
-		refreshToken - A Firebase Auth refresh token for the newly created user.
-		expiresIn - The number of seconds in which the ID token expires.
-		localId - The uid of the newly created user.
+
 		#End If
 	
 End Sub
@@ -403,11 +369,7 @@ Public Sub Login_EmailPassword(Email As String,Password As String) As ResumableS
 	Return User
 	
 		#IF Documentation
-		idToken - A Firebase Auth ID token for the newly created user.
-		email - The email for the newly created user.
-		refreshToken - A Firebase Auth refresh token for the newly created user.
-		expiresIn - The number of seconds in which the ID token expires.
-		localId - The uid of the newly created user.
+
 		#End If
 	
 End Sub
@@ -467,29 +429,29 @@ End Sub
 '		Log("Error: " & AnonymousUser.Error.ErrorMessage)
 '	End If
 '</code>
-Public Sub LogIn_Anonymously As ResumableSub
-	
-'	Wait For (isUserLoggedIn) Complete (isLoggedIn As Boolean)
+'Public Sub LogIn_Anonymously As ResumableSub
 '	
-'	If isLoggedIn Then
-'		Wait For (GetUser) Complete (User As PocketbaseUser)
-'		
-'		If User.isAnonymous = False Then
-'			If m_Pocketbase.LogEvents Then LogColor("PocketbaseAuth: LogIn_Anonymously - User is logged in with a non-anonymous user, this user is now logged out",xui.Color_Red)
-'			Wait For (Logout) Complete (Result As PocketbaseError)
-'			
-'			Wait for (SignUp("","",Null)) Complete (NewUser As PocketbaseUser)
-'			Return NewUser
-'			
-'		End If
-'		
-'		Return User
-'	Else
-'		Wait for (SignUp("","",Null)) Complete (NewUser As PocketbaseUser)
-'		Return NewUser
-'	End If
-	
-End Sub
+''	Wait For (isUserLoggedIn) Complete (isLoggedIn As Boolean)
+''	
+''	If isLoggedIn Then
+''		Wait For (GetUser) Complete (User As PocketbaseUser)
+''		
+''		If User.isAnonymous = False Then
+''			If m_Pocketbase.LogEvents Then LogColor("PocketbaseAuth: LogIn_Anonymously - User is logged in with a non-anonymous user, this user is now logged out",xui.Color_Red)
+''			Wait For (Logout) Complete (Result As PocketbaseError)
+''			
+''			Wait for (SignUp("","",Null)) Complete (NewUser As PocketbaseUser)
+''			Return NewUser
+''			
+''		End If
+''		
+''		Return User
+''	Else
+''		Wait for (SignUp("","",Null)) Complete (NewUser As PocketbaseUser)
+''		Return NewUser
+''	End If
+'	
+'End Sub
 
 'Gets the user object
 '<code>Wait For (xPocketbase.Auth.GetUser) Complete (User As PocketbaseUser)</code>
@@ -733,78 +695,78 @@ End Sub
 
 #Region SocialLogin
 
-'https://pocketbase.io/docs/authentication/#authenticate-with-oauth2
-#IF B4J
-'Signs the user in using third party OAuth providers.
-'<code>
-'	#If B4A
-'	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
-'	#Else If B4I
-'	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
-'	#Else If B4J
-'	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email","xxx")) Complete (User As PocketbaseUser)
+''https://pocketbase.io/docs/authentication/#authenticate-with-oauth2
+'#IF B4J
+''Signs the user in using third party OAuth providers.
+''<code>
+''	#If B4A
+''	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
+''	#Else If B4I
+''	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
+''	#Else If B4J
+''	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email","xxx")) Complete (User As PocketbaseUser)
+''	#End If
+''
+''	If User.Error.Success Then
+''		Log("successfully logged in with " & User.Email)
+''	Else
+''		Log("Error: " & User.Error.ErrorMessage)
+''	End If
+''</code>
+'Public Sub SignInWithOAuth(ClientId As String,Provider As String,Scope As String,ClientSecret As String) As ResumableSub
+'#Else
+'	'Signs the user in using third party OAuth providers.
+'	'<code>
+''	#If B4A
+''	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
+''	#Else If B4I
+''	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
+''	#Else If B4J
+''	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email","xxx")) Complete (User As PocketbaseUser)
+''	#End If
+'	'
+''	If User.Error.Success Then
+''		Log("successfully logged in with " & User.Email)
+''	Else
+''		Log("Error: " & User.Error.ErrorMessage)
+''	End If
+'	'</code>
+'Public Sub SignInWithOAuth(ClientId As String,Provider As String,Scope As String) As ResumableSub
+'#End If
+'	
+'	#If B4J
+'	m_ClientSecret = ClientSecret
 '	#End If
-'
-'	If User.Error.Success Then
-'		Log("successfully logged in with " & User.Email)
-'	Else
-'		Log("Error: " & User.Error.ErrorMessage)
+'	
+'	OAuth_Authenticate(ClientId,Provider,Scope)
+'	
+'	Wait For OAuthTokenReceived (Successful As Boolean)
+'	
+'	Dim DatabaseError As PocketbaseError
+'	DatabaseError.Initialize
+'	DatabaseError.Success = Successful
+'	If DatabaseError.Success = False Then
+'		DatabaseError.StatusCode = ""
+'		DatabaseError.ErrorMessage = ""
 '	End If
-'</code>
-Public Sub SignInWithOAuth(ClientId As String,Provider As String,Scope As String,ClientSecret As String) As ResumableSub
-#Else
-	'Signs the user in using third party OAuth providers.
-	'<code>
-'	#If B4A
-'	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
-'	#Else If B4I
-'	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email")) Complete (User As PocketbaseUser)
-'	#Else If B4J
-'	Wait For (xPocketbase.Auth.SignInWithOAuth("xxx.apps.googleusercontent.com","google","profile email https://www.googleapis.com/auth/userinfo.email","xxx")) Complete (User As PocketbaseUser)
-'	#End If
-	'
-'	If User.Error.Success Then
-'		Log("successfully logged in with " & User.Email)
+'	
+'	If Successful Then
+'		Wait For (GetUser) Complete (User As PocketbaseUser)
+'		User.Error = DatabaseError
+'		AuthStateChange("signedIn")
+'		Return User
 '	Else
-'		Log("Error: " & User.Error.ErrorMessage)
+'			
+'		Dim User As PocketbaseUser
+'		User.Initialize
+'		User.Error = DatabaseError
+'		Logout
+'		Return User
+'			
+'			
 '	End If
-	'</code>
-Public Sub SignInWithOAuth(ClientId As String,Provider As String,Scope As String) As ResumableSub
-#End If
-	
-	#If B4J
-	m_ClientSecret = ClientSecret
-	#End If
-	
-	OAuth_Authenticate(ClientId,Provider,Scope)
-	
-	Wait For OAuthTokenReceived (Successful As Boolean)
-	
-	Dim DatabaseError As PocketbaseError
-	DatabaseError.Initialize
-	DatabaseError.Success = Successful
-	If DatabaseError.Success = False Then
-		DatabaseError.StatusCode = ""
-		DatabaseError.ErrorMessage = ""
-	End If
-	
-	If Successful Then
-		Wait For (GetUser) Complete (User As PocketbaseUser)
-		User.Error = DatabaseError
-		AuthStateChange("signedIn")
-		Return User
-	Else
-			
-		Dim User As PocketbaseUser
-		User.Initialize
-		User.Error = DatabaseError
-		Logout
-		Return User
-			
-			
-	End If
-	
-End Sub
+'	
+'End Sub
 
 #End Region
 
@@ -820,307 +782,307 @@ End Sub
 
 #Region OAuth
 
-Private Sub GetPackageName As String
-	#If B4A
-	Return Application.PackageName
-	#Else If B4I
-	Dim no As NativeObject
-	no = no.Initialize("NSBundle").RunMethod("mainBundle", Null)
-	Dim name As Object = no.RunMethod("objectForInfoDictionaryKey:", Array("CFBundleIdentifier"))
-	Return name
-	#Else If B4J
-	Dim joBA As JavaObject
-	joBA.InitializeStatic("anywheresoftware.b4a.BA")
-	Return joBA.GetField("packageName")
-	#End If
-End Sub
-
-Private Sub OAuth_Authenticate(ClientId As String,Provider As String,Scope As String)
-	
-	CurrentClientId = ClientId
-	CurrentProvider = Provider
-
-	If Provider = "apple" Then
-		SignInWithApple
-	Else
-		
-			#if B4J
-		PrepareServer
-#End If
-		
-		If Provider = "google" Then
-			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-oauth2"$, _
-         CreateMap("client_id": ClientId, _
-        "redirectURL": GetRedirectUri, _
-        "code": "code", _
-        "provider": "google", _
-        "scope": Scope))
-		Else
-					
-			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-oauth2"$, _
-         CreateMap("client_id": ClientId, _
-        "redirectURL": $"${GetPackageName}://${m_Pocketbase.URL.Replace("https://","")}/auth/v1/callback"$, _
-		 "code": "code", _
-        "scope": Scope))
-			'        '"redirectURL": $"com.stoltex.Pocketbase://${m_Pocketbase.URL.Replace("https://","")}/auth/v1/callback"$, _
-	#if B4J
-			PrepareServer
-	#end if
-			'http://127.0.0.1:3000
-		End If
-		
-#if B4A
-		Dim pi As PhoneIntents
-		StartActivity(pi.OpenBrowser(link))
-#else if B4i
-		Main.App.OpenURL(link)
-#else if B4J and UI
-		fx.ShowExternalDocument(link)
-#end if
-		
-	End If
-	
-End Sub
-
-#if B4J
-Private Sub PrepareServer
-	If server.IsInitialized Then server.Close
-	If astream.IsInitialized Then astream.Close
-	Do While True
-		Try
-			server.Initialize(port, "server")
-			server.Listen
-			Exit
-		Catch
-			port = port + 1
-			Log("PocketbaseAuth: " & LastException)
-		End Try
-	Loop
-	Wait For server_NewConnection (Successful As Boolean, NewSocket As Socket)
-	If Successful Then
-		astream.Initialize(NewSocket.InputStream, NewSocket.OutputStream, "astream")
-		Dim Response As StringBuilder
-		Response.Initialize
-		Do While Response.ToString.Contains("Host:") = False
-			Wait For AStream_NewData (Buffer() As Byte)
-			Response.Append(BytesToString(Buffer, 0, Buffer.Length, "UTF8"))
-		Loop
-		astream.Write(("HTTP/1.0 200" & Chr(13) & Chr(10)).GetBytes("UTF8"))
-		Sleep(50)
-		astream.Close
-		server.Close
-		ParseBrowserUrl(Regex.Split2("$",Regex.MULTILINE, Response.ToString)(0))
-	End If
-	
-End Sub
-#else if B4A
-Public Sub CallFromResume(Intent As Intent)
-	If IsNewOAuth2Intent(Intent) Then
-		LastIntent = Intent
-		ParseBrowserUrl(Intent.GetData)
-	End If
-End Sub
-
-Private Sub IsNewOAuth2Intent(Intent As Intent) As Boolean
-	Return Intent.IsInitialized And Intent <> LastIntent And Intent.Action = Intent.ACTION_VIEW And _
-		Intent.GetData <> Null And Intent.GetData.StartsWith(Application.PackageName)
-End Sub
-#else if B4I
-Public Sub CallFromOpenUrl (url As String)
-	If url.StartsWith(packageName & ":/oath") Then
-		ParseBrowserUrl(url)
-	End If
-End Sub
-
-#end if
-
-Private Sub GetRedirectUri As String
-	#if B4J
-	Return "http://127.0.0.1:" & port
-	#Else
-	Return packageName & ":/oath"
-	#End If
-End Sub
-
-Private Sub BuildLink(Url As String, Params As Map) As String
-	Dim su As StringUtils
-	Dim sb As StringBuilder
-	sb.Initialize
-	sb.Append(Url)
-	If Params.Size > 0 Then
-		sb.Append("&")
-		For Each k As String In Params.Keys
-			sb.Append(su.EncodeUrl(k, "utf8")).Append("=").Append(su.EncodeUrl(Params.Get(k), "utf8"))
-			sb.Append("&")
-		Next
-		sb.Remove(sb.Length - 1, sb.Length)
-	End If
-	Return sb.ToString
-End Sub
-
-Private Sub ParseBrowserUrl(Response As String)
-	'Log(Response)
-	Dim m As Matcher = Regex.Matcher("code=([^&\s]+)", Response)
-	If m.Find Then
-		Dim code As String = m.Group(1)
-		If CurrentProvider = "google" Then
-			GetTokenFromGoogleAuthorizationCode(code)
-		Else
-			GetTokenFromPocketbase(code)
-		End If
-	Else
-		Log("PocketbaseAuth: Error parsing server response: " & Response)
-		Logout
-	End If
-End Sub
-
-Private Sub AddClientSecret (s As String) As String
-	If m_ClientSecret <> "" Then
-		s = s & "&client_secret=" & m_ClientSecret
-	End If
-	Return s
-End Sub
-
-Private Sub GetTokenFromPocketbase(IdToken As String)
-	
-	Dim j As HttpJob
-	j.Initialize("", Me)
-		
-	Dim json As JSONGenerator
-	json.Initialize(CreateMap("id_token":IdToken,"provider":CurrentProvider))
-		
-
-	j.PostString($"${m_Pocketbase.URL}/auth/v1/token?grant_type=id_token"$, json.ToString)
-	j.GetRequest.SetContentType("application/json")
-		
-	Wait For (j) JobDone(j As HttpJob)
-	If j.Success Then
-		TokenInformationFromResponse(Pocketbase_Functions.GenerateResult(j))
-		CallSubDelayed2(Me,"OAuthTokenReceived",True)
-	Else
-		Logout
-		CallSubDelayed2(Me,"OAuthTokenReceived",False)
-	End If
-	j.Release
-	
-End Sub
-
-'********SignIn with Google****************
-
-Private Sub GetTokenFromGoogleAuthorizationCode (Code As String)
-	'Log("Getting access token from google authorization code...")
-	Dim j As HttpJob
-	j.Initialize("", Me)
-	Dim postString As String = $"code=${Code}&client_id=${CurrentClientId}&grant_type=authorization_code&redirect_uri=${GetRedirectUri}"$
-	postString = AddClientSecret(postString)
-	j.PostString("https://www.googleapis.com/oauth2/v4/token", postString)
-		
-	Wait For (j) JobDone(j As HttpJob)
-	If j.Success Then
-		
-		Dim tmp_result As Map = Pocketbase_Functions.GenerateResult(j)
-		
-		GetTokenFromPocketbase(tmp_result.Get("id_token"))
-		
-	Else
-		Logout
-		CallSubDelayed2(Me,"OAuthTokenReceived",False)
-	End If
-	j.Release
-End Sub
-
-'********SignIn with Apple*****************
-
-Private Sub SignInWithApple
-	#If B4I
-	Dim NativeButton As NativeObject
-	btn = NativeButton.Initialize("ASAuthorizationAppleIDButton").RunMethod("new", Null)
-	Dim no As NativeObject = Me
-	no.RunMethod("SetButton:", Array(btn))
-	'mBase.AddView(btn, 0, 0, mBase.Width, mBase.Height)
-	dele_gate = no.Initialize("AuthorizationDelegate").RunMethod("new", Null)
-	btn.As(NativeObject).RunMethod ("sendActionsForControlEvents:", Array (64)) ' UIControlEventTouchUpInside
-	#End If
-End Sub
-
-#If B4I
-
-Private Sub Auth_Result(Success As Boolean, Result As Object)
-	If Success Then
-		Dim no As NativeObject = Result
-		Dim credential As NativeObject = no.GetField("credential")
-		If GetType(credential) = "ASAuthorizationAppleIDCredential" Then
-			
-			Dim Token() As Byte = credential.NSDataToArray(credential.GetField("identityToken"))
-			
-			
-			GetTokenFromPocketbase(BytesToString(Token, 0, Token.Length, "UTF8"))
-			
-			Dim email, name As String
-			If credential.GetField("email").IsInitialized Then
-				Dim formatter As NativeObject
-				name = formatter.Initialize("NSPersonNameComponentsFormatter").RunMethod("localizedStringFromPersonNameComponents:style:options:", _
-					Array(credential.GetField("fullName"), 0, 0)).AsString
-				email = credential.GetField("email").AsString
-				'Log(email)
-				'Log(name)
-				'CallSub3(mCallBack, mEventName & "_AuthResult", name, email)
-			End If
-		Else
-			Log("Unexpected type: " & GetType(credential))
-		End If
-	End If
-End Sub
-
-#End If
+'Private Sub GetPackageName As String
+'	#If B4A
+'	Return Application.PackageName
+'	#Else If B4I
+'	Dim no As NativeObject
+'	no = no.Initialize("NSBundle").RunMethod("mainBundle", Null)
+'	Dim name As Object = no.RunMethod("objectForInfoDictionaryKey:", Array("CFBundleIdentifier"))
+'	Return name
+'	#Else If B4J
+'	Dim joBA As JavaObject
+'	joBA.InitializeStatic("anywheresoftware.b4a.BA")
+'	Return joBA.GetField("packageName")
+'	#End If
+'End Sub
+'
+'Private Sub OAuth_Authenticate(ClientId As String,Provider As String,Scope As String)
+'	
+'	CurrentClientId = ClientId
+'	CurrentProvider = Provider
+'
+'	If Provider = "apple" Then
+'		SignInWithApple
+'	Else
+'		
+'			#if B4J
+'		PrepareServer
+'#End If
+'		
+'		If Provider = "google" Then
+'			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-oauth2"$, _
+'         CreateMap("client_id": ClientId, _
+'        "redirectURL": GetRedirectUri, _
+'        "code": "code", _
+'        "provider": "google", _
+'        "scope": Scope))
+'		Else
+'					
+'			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-oauth2"$, _
+'         CreateMap("client_id": ClientId, _
+'        "redirectURL": $"${GetPackageName}://${m_Pocketbase.URL.Replace("https://","")}/auth/v1/callback"$, _
+'		 "code": "code", _
+'        "scope": Scope))
+'			'        '"redirectURL": $"com.stoltex.Pocketbase://${m_Pocketbase.URL.Replace("https://","")}/auth/v1/callback"$, _
+'	#if B4J
+'			PrepareServer
+'	#end if
+'			'http://127.0.0.1:3000
+'		End If
+'		
+'#if B4A
+'		Dim pi As PhoneIntents
+'		StartActivity(pi.OpenBrowser(link))
+'#else if B4i
+'		Main.App.OpenURL(link)
+'#else if B4J and UI
+'		fx.ShowExternalDocument(link)
+'#end if
+'		
+'	End If
+'	
+'End Sub
+'
+'#if B4J
+'Private Sub PrepareServer
+'	If server.IsInitialized Then server.Close
+'	If astream.IsInitialized Then astream.Close
+'	Do While True
+'		Try
+'			server.Initialize(port, "server")
+'			server.Listen
+'			Exit
+'		Catch
+'			port = port + 1
+'			Log("PocketbaseAuth: " & LastException)
+'		End Try
+'	Loop
+'	Wait For server_NewConnection (Successful As Boolean, NewSocket As Socket)
+'	If Successful Then
+'		astream.Initialize(NewSocket.InputStream, NewSocket.OutputStream, "astream")
+'		Dim Response As StringBuilder
+'		Response.Initialize
+'		Do While Response.ToString.Contains("Host:") = False
+'			Wait For AStream_NewData (Buffer() As Byte)
+'			Response.Append(BytesToString(Buffer, 0, Buffer.Length, "UTF8"))
+'		Loop
+'		astream.Write(("HTTP/1.0 200" & Chr(13) & Chr(10)).GetBytes("UTF8"))
+'		Sleep(50)
+'		astream.Close
+'		server.Close
+'		ParseBrowserUrl(Regex.Split2("$",Regex.MULTILINE, Response.ToString)(0))
+'	End If
+'	
+'End Sub
+'#else if B4A
+'Public Sub CallFromResume(Intent As Intent)
+'	If IsNewOAuth2Intent(Intent) Then
+'		LastIntent = Intent
+'		ParseBrowserUrl(Intent.GetData)
+'	End If
+'End Sub
+'
+'Private Sub IsNewOAuth2Intent(Intent As Intent) As Boolean
+'	Return Intent.IsInitialized And Intent <> LastIntent And Intent.Action = Intent.ACTION_VIEW And _
+'		Intent.GetData <> Null And Intent.GetData.StartsWith(Application.PackageName)
+'End Sub
+'#else if B4I
+'Public Sub CallFromOpenUrl (url As String)
+'	If url.StartsWith(packageName & ":/oath") Then
+'		ParseBrowserUrl(url)
+'	End If
+'End Sub
+'
+'#end if
+'
+'Private Sub GetRedirectUri As String
+'	#if B4J
+'	Return "http://127.0.0.1:" & port
+'	#Else
+'	Return packageName & ":/oath"
+'	#End If
+'End Sub
+'
+'Private Sub BuildLink(Url As String, Params As Map) As String
+'	Dim su As StringUtils
+'	Dim sb As StringBuilder
+'	sb.Initialize
+'	sb.Append(Url)
+'	If Params.Size > 0 Then
+'		sb.Append("&")
+'		For Each k As String In Params.Keys
+'			sb.Append(su.EncodeUrl(k, "utf8")).Append("=").Append(su.EncodeUrl(Params.Get(k), "utf8"))
+'			sb.Append("&")
+'		Next
+'		sb.Remove(sb.Length - 1, sb.Length)
+'	End If
+'	Return sb.ToString
+'End Sub
+'
+'Private Sub ParseBrowserUrl(Response As String)
+'	'Log(Response)
+'	Dim m As Matcher = Regex.Matcher("code=([^&\s]+)", Response)
+'	If m.Find Then
+'		Dim code As String = m.Group(1)
+'		If CurrentProvider = "google" Then
+'			GetTokenFromGoogleAuthorizationCode(code)
+'		Else
+'			GetTokenFromPocketbase(code)
+'		End If
+'	Else
+'		Log("PocketbaseAuth: Error parsing server response: " & Response)
+'		Logout
+'	End If
+'End Sub
+'
+'Private Sub AddClientSecret (s As String) As String
+'	If m_ClientSecret <> "" Then
+'		s = s & "&client_secret=" & m_ClientSecret
+'	End If
+'	Return s
+'End Sub
+'
+'Private Sub GetTokenFromPocketbase(IdToken As String)
+'	
+'	Dim j As HttpJob
+'	j.Initialize("", Me)
+'		
+'	Dim json As JSONGenerator
+'	json.Initialize(CreateMap("id_token":IdToken,"provider":CurrentProvider))
+'		
+'
+'	j.PostString($"${m_Pocketbase.URL}/auth/v1/token?grant_type=id_token"$, json.ToString)
+'	j.GetRequest.SetContentType("application/json")
+'		
+'	Wait For (j) JobDone(j As HttpJob)
+'	If j.Success Then
+'		TokenInformationFromResponse(Pocketbase_Functions.GenerateResult(j))
+'		CallSubDelayed2(Me,"OAuthTokenReceived",True)
+'	Else
+'		Logout
+'		CallSubDelayed2(Me,"OAuthTokenReceived",False)
+'	End If
+'	j.Release
+'	
+'End Sub
+'
+''********SignIn with Google****************
+'
+'Private Sub GetTokenFromGoogleAuthorizationCode (Code As String)
+'	'Log("Getting access token from google authorization code...")
+'	Dim j As HttpJob
+'	j.Initialize("", Me)
+'	Dim postString As String = $"code=${Code}&client_id=${CurrentClientId}&grant_type=authorization_code&redirect_uri=${GetRedirectUri}"$
+'	postString = AddClientSecret(postString)
+'	j.PostString("https://www.googleapis.com/oauth2/v4/token", postString)
+'		
+'	Wait For (j) JobDone(j As HttpJob)
+'	If j.Success Then
+'		
+'		Dim tmp_result As Map = Pocketbase_Functions.GenerateResult(j)
+'		
+'		GetTokenFromPocketbase(tmp_result.Get("id_token"))
+'		
+'	Else
+'		Logout
+'		CallSubDelayed2(Me,"OAuthTokenReceived",False)
+'	End If
+'	j.Release
+'End Sub
+'
+''********SignIn with Apple*****************
+'
+'Private Sub SignInWithApple
+'	#If B4I
+'	Dim NativeButton As NativeObject
+'	btn = NativeButton.Initialize("ASAuthorizationAppleIDButton").RunMethod("new", Null)
+'	Dim no As NativeObject = Me
+'	no.RunMethod("SetButton:", Array(btn))
+'	'mBase.AddView(btn, 0, 0, mBase.Width, mBase.Height)
+'	dele_gate = no.Initialize("AuthorizationDelegate").RunMethod("new", Null)
+'	btn.As(NativeObject).RunMethod ("sendActionsForControlEvents:", Array (64)) ' UIControlEventTouchUpInside
+'	#End If
+'End Sub
+'
+'#If B4I
+'
+'Private Sub Auth_Result(Success As Boolean, Result As Object)
+'	If Success Then
+'		Dim no As NativeObject = Result
+'		Dim credential As NativeObject = no.GetField("credential")
+'		If GetType(credential) = "ASAuthorizationAppleIDCredential" Then
+'			
+'			Dim Token() As Byte = credential.NSDataToArray(credential.GetField("identityToken"))
+'			
+'			
+'			GetTokenFromPocketbase(BytesToString(Token, 0, Token.Length, "UTF8"))
+'			
+'			Dim email, name As String
+'			If credential.GetField("email").IsInitialized Then
+'				Dim formatter As NativeObject
+'				name = formatter.Initialize("NSPersonNameComponentsFormatter").RunMethod("localizedStringFromPersonNameComponents:style:options:", _
+'					Array(credential.GetField("fullName"), 0, 0)).AsString
+'				email = credential.GetField("email").AsString
+'				'Log(email)
+'				'Log(name)
+'				'CallSub3(mCallBack, mEventName & "_AuthResult", name, email)
+'			End If
+'		Else
+'			Log("Unexpected type: " & GetType(credential))
+'		End If
+'	End If
+'End Sub
+'
+'#End If
 
 #End Region
 
 #Region Enums
 
-Public Sub getProvider_Google As String
-	Return "google"
-End Sub
-
-'B4I Only
-Public Sub getProvider_Apple As String
-	Return "apple"
-End Sub
+'Public Sub getProvider_Google As String
+'	Return "google"
+'End Sub
+'
+''B4I Only
+'Public Sub getProvider_Apple As String
+'	Return "apple"
+'End Sub
 
 #End Region
 
-#if OBJC
-#import <AuthenticationServices/AuthenticationServices.h>
-- (void) SetButton:(ASAuthorizationAppleIDButton*)btn {
-	 [btn addTarget:self action:@selector(handleAuthorizationAppleIDButtonPress:) forControlEvents:UIControlEventTouchUpInside];
-}
-- (void) handleAuthorizationAppleIDButtonPress:(UIButton *) sender {
-	ASAuthorizationAppleIDProvider* provider = [ASAuthorizationAppleIDProvider new];
-	ASAuthorizationAppleIDRequest* req = [provider createRequest];
-	req.requestedScopes = @[ASAuthorizationScopeEmail, ASAuthorizationScopeFullName];
-	ASAuthorizationController* controller = [[ASAuthorizationController alloc] initWithAuthorizationRequests:
-		@[req]];
-	controller.delegate = self._dele_gate;
-	controller.presentationContextProvider = self._dele_gate;
-	[self._dele_gate setValue:self.bi forKey:@"bi"];
-	controller.performRequests;
-}
-@end
-@interface AuthorizationDelegate : NSObject<ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding>
-@property (nonatomic) B4I* bi;
-@end
-@implementation AuthorizationDelegate
-- (void)authorizationController:(ASAuthorizationController *)controller 
-   didCompleteWithAuthorization:(ASAuthorization *)authorization {
-   [self.bi raiseUIEvent:nil event:@"auth_result::" params:@[@(true), authorization]];
-  }
- - (void)authorizationController:(ASAuthorizationController *)controller 
-           didCompleteWithError:(NSError *)error {
-	 NSLog(@"error: %@", error);
-	 [self.bi raiseUIEvent:nil event:@"auth_result::" params:@[@(false), [NSNull null]]];
-}
-- (ASPresentationAnchor)presentationAnchorForAuthorizationController:(ASAuthorizationController *)controller  {
-	NSLog(@"presentationAnchorForAuthorizationController");
-	return UIApplication.sharedApplication.keyWindow;
-}
-#End If
+'#if OBJC
+'#import <AuthenticationServices/AuthenticationServices.h>
+'- (void) SetButton:(ASAuthorizationAppleIDButton*)btn {
+'	 [btn addTarget:self action:@selector(handleAuthorizationAppleIDButtonPress:) forControlEvents:UIControlEventTouchUpInside];
+'}
+'- (void) handleAuthorizationAppleIDButtonPress:(UIButton *) sender {
+'	ASAuthorizationAppleIDProvider* provider = [ASAuthorizationAppleIDProvider new];
+'	ASAuthorizationAppleIDRequest* req = [provider createRequest];
+'	req.requestedScopes = @[ASAuthorizationScopeEmail, ASAuthorizationScopeFullName];
+'	ASAuthorizationController* controller = [[ASAuthorizationController alloc] initWithAuthorizationRequests:
+'		@[req]];
+'	controller.delegate = self._dele_gate;
+'	controller.presentationContextProvider = self._dele_gate;
+'	[self._dele_gate setValue:self.bi forKey:@"bi"];
+'	controller.performRequests;
+'}
+'@end
+'@interface AuthorizationDelegate : NSObject<ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding>
+'@property (nonatomic) B4I* bi;
+'@end
+'@implementation AuthorizationDelegate
+'- (void)authorizationController:(ASAuthorizationController *)controller 
+'   didCompleteWithAuthorization:(ASAuthorization *)authorization {
+'   [self.bi raiseUIEvent:nil event:@"auth_result::" params:@[@(true), authorization]];
+'  }
+' - (void)authorizationController:(ASAuthorizationController *)controller 
+'           didCompleteWithError:(NSError *)error {
+'	 NSLog(@"error: %@", error);
+'	 [self.bi raiseUIEvent:nil event:@"auth_result::" params:@[@(false), [NSNull null]]];
+'}
+'- (ASPresentationAnchor)presentationAnchorForAuthorizationController:(ASAuthorizationController *)controller  {
+'	NSLog(@"presentationAnchorForAuthorizationController");
+'	return UIApplication.sharedApplication.keyWindow;
+'}
+'#End If

@@ -9,6 +9,7 @@ Sub Class_Globals
 	
 	Private m_TableName As String
 	Private m_lstColumnValue As List
+	Private m_CustomParameters As String = ""
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -29,16 +30,22 @@ Public Sub Insert(ColumnValue As Map) As Pocketbase_DatabaseInsert
 	Return Me
 End Sub
 
-'Insert many rows
-'<code>	Dim lst_BulkInsert As List
-'lst_BulkInsert.Initialize	
-'lst_BulkInsert.Add(CreateMap("Tasks_Name":"Task 01","Tasks_Checked":True,"Tasks_CreatedAt":DateUtils.TicksToString(DateTime.Now)))
-'lst_BulkInsert.Add(CreateMap("Tasks_Name":"Task 02","Tasks_Checked":False,"Tasks_CreatedAt":DateUtils.TicksToString(DateTime.Now)))
-'</code>
-Public Sub InsertBulk(ColumnValueList As List) As Pocketbase_DatabaseInsert
-	m_lstColumnValue.Add(ColumnValueList)
+#Region CustomParameters
+
+'Auto expand record relations.
+Public Sub Parameter_Expand(Expand As String) As Pocketbase_DatabaseInsert
+	m_CustomParameters = m_CustomParameters & $"&expand=${Expand}"$
 	Return Me
 End Sub
+
+'Comma separated string of the fields to return in the JSON response (by default returns all fields).
+'<code>CustomQuery.Parameter_Fields("Task_Name,Task_CompletedAt")</code>
+Public Sub Parameter_Fields(Fields As String) As Pocketbase_DatabaseInsert
+	m_CustomParameters = m_CustomParameters & $"&fields=${Fields}"$
+	Return Me
+End Sub
+
+#End Region
 
 Public Sub Execute As ResumableSub
 	
@@ -58,7 +65,8 @@ Public Sub Execute As ResumableSub
 	End If
 	
 	Dim url As String = ""
-	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records"$
+	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
+	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records${m_CustomParameters}"$
 		
 	Dim jsn As JSONGenerator
 	jsn.Initialize2(m_lstColumnValue)
