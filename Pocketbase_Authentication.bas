@@ -73,6 +73,19 @@ Public Sub Initialize(ThisPocketbase As Pocketbase, EventName As String)
 	
 End Sub
 
+#Region Properties
+
+'Checks if the user is logged in, renews the access token if it has expired
+'<code>Wait For (xPocketbase.Auth.isUserLoggedIn) Complete (isLoggedIn As Boolean)</code>
+Public Sub isUserLoggedIn As ResumableSub
+	Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
+	Return AccessToken <> ""
+End Sub
+
+Public Sub getTokenInformations As PocketbaseTokenInformations
+	Return sti_Token
+End Sub
+
 'Change it only if you change the default "users" table name
 Public Sub setUserCollectionName(Name As String)
 	m_UserCollectionName = Name
@@ -82,43 +95,9 @@ Public Sub getUserCollectionName As String
 	Return m_UserCollectionName
 End Sub
 
-'Checks if the user is logged in, renews the access token if it has expired
-'<code>Wait For (xPocketbase.Auth.isUserLoggedIn) Complete (isLoggedIn As Boolean)</code>
-Public Sub isUserLoggedIn As ResumableSub
-	Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
-	Return AccessToken <> ""
-End Sub
+#End Region
 
-Public Sub TokenInformations As PocketbaseTokenInformations
-	Return sti_Token
-End Sub
-
-Private Sub TokenInformationFromResponse (m As Map)
-	
-	Dim ThisMap As Map = m.Get("record")
-	
-	If ThisMap.ContainsKey("exp") Then sti_Token.AccessExpiry = DateTime.Now + ThisMap.Get("exp") * 1000 - 5 * 60 * 1000
-	If m.ContainsKey("token") Then sti_Token.AccessToken = m.Get("token")
-	If ThisMap.ContainsKey("email") Then
-		sti_Token.Email = ThisMap.Get("email")
-	End If
-	If ThisMap.ContainsKey("id") Then
-		sti_Token.Id = ThisMap.Get("id")
-	End If
-	sti_Token.Valid = True
-	'If ThisMap.ContainsKey("tag") Then sti_Token.Tag = ThisMap.Get("tag")
-	
-	If m_Pocketbase.LogEvents Then Log($"PocketbaseAuth: Token received. Expires: ${DateUtils.TicksToString(sti_Token.AccessExpiry)}"$)
-	SaveToken
-	'RaiseEvent_AccessTokenAvailable(True)
-End Sub
-
-Public Sub SaveToken
-	Dim raf As RandomAccessFile
-	raf.Initialize(TokenFolder, TokenFile, False)
-	raf.WriteB4XObject(sti_Token, raf.CurrentPosition)
-	raf.Close
-End Sub
+#Region Methods
 
 'User tokens and infos are removed from the device
 Public Sub Logout As ResumableSub
@@ -140,55 +119,17 @@ Public Sub Logout As ResumableSub
 	
 End Sub
 
-Public Sub GetAccessToken As ResumableSub
-	If sti_Token.Valid = False Then
-		sti_Token.AccessToken = ""
-		SaveToken
-		If m_Pocketbase.LogEvents Then Log("PocketbaseAuth: User is logged out, this user must log in again")
-		AuthStateChange("signedOut")
-		'Authenticate
-		'RaiseEvent_Authenticate
-	Else If sti_Token.AccessExpiry < DateTime.Now Then
-		'GetTokenFromRefresh
-		'RaiseEvent_RefreshToken
-		Wait For (RefreshToken) Complete (Success As Boolean)
-		If Success = False Then
-			sti_Token.AccessToken = ""
-			SaveToken
-			If m_Pocketbase.LogEvents Then Log("PocketbaseAuth: Access token could not be renewed")
-			AuthStateChange("signedOut")
-		End If
-	Else
-		'RaiseEvent_AccessTokenAvailable(True)
-	End If
-	Return sti_Token.AccessToken
-End Sub
-
-Public Sub RefreshToken As ResumableSub
-	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-refresh"$
-	
-	Dim j As HttpJob : j.Initialize("",Me)
-	j.PostString(url,"")
-	j.GetRequest.SetContentType("application/json")
-	j.GetRequest.SetHeader("Authorization","Bearer " & sti_Token.AccessToken)
-	
-	Wait For (j) JobDone(j As HttpJob)
-	
-	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
-	If j.Success Then
-		TokenInformationFromResponse(Pocketbase_Functions.GenerateResult(j))
-		AuthStateChange("tokenRefreshed")
-		Return True
-	Else
-		Return False
-	End If
-	
-End Sub
-
 'Allow your users to sign up and create a new account.
 'Options - Optional fields
 'A full list of values you find in the dashboard in the “API Preview” in the “users” collection
+'<code>
+'	Wait For (xPocketbase.Auth.SignUp("test@example.com","Test123!","Test123!",Null)) Complete (NewUser As PocketbaseUser)
+'	If NewUser.Error.Success Then
+'		Log("successfully registered with " & NewUser.Email)
+'	Else
+'		Log("Error: " & NewUser.Error.ErrorMessage)
+'	End If
+'</code>
 Public Sub SignUp(Email As String,Password As String,PasswordConfirm As String,Options As Map) As ResumableSub
 	
 	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/records"$
@@ -253,7 +194,15 @@ Public Sub SignUp(Email As String,Password As String,PasswordConfirm As String,O
 	
 End Sub
 
-'Returns PocketbaseError type
+'Sends users account verification request
+'<code>
+'	Wait For (xPocketbase.Auth.RequestVerification("test@example.com")) Complete (Success As PocketbaseError)
+'	If Success.Success Then
+'		Log("verification code send to email")
+'	Else
+'		Log("Error: " & Success.ErrorMessage)
+'	End If
+'</code>
 Public Sub RequestVerification(Email As String) As ResumableSub
 	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/request-verification"$
 	
@@ -289,7 +238,15 @@ Public Sub RequestVerification(Email As String) As ResumableSub
 	Return DatabaseError
 End Sub
 
-'Returns PocketbaseError type
+'Confirms the user account with the verification token from the e-mail
+'<code>
+'	Wait For (xPocketbase.Auth.ConfirmVerification("xxx")) Complete (Success As PocketbaseError)
+'	If Success.Success Then
+'		Log("verification sucessfull")
+'	Else
+'		Log("Error: " & Success.ErrorMessage)
+'	End If
+'</code>
 Public Sub ConfirmVerification(VerificationToken As String) As ResumableSub
 	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/confirm-verification"$
 	
@@ -325,14 +282,14 @@ Public Sub ConfirmVerification(VerificationToken As String) As ResumableSub
 	Return DatabaseError
 End Sub
 
-'If an account is created, users can login to your app.
+'Authenticate with combination of email and password
 '<code>
-'	Wait For (xPocketbase.Auth.LogIn_EmailPassword("test@example.com","Test123!!")) Complete (User As PocketbaseUser)
-'		If User.Error.Success Then
-'			Log("successfully logged in with " & User.Email)
-'		Else
-'			Log("Error: " & User.Error.ErrorMessage)
-'		End If
+'	Wait For (xPocketbase.Auth.LogIn_EmailPassword("test@example.com","Test123!")) Complete (User As PocketbaseUser)
+'	If User.Error.Success Then
+'		Log("successfully logged in with " & User.Email)
+'	Else
+'		Log("Error: " & User.Error.ErrorMessage)
+'	End If
 '</code>
 Public Sub Login_EmailPassword(Email As String,Password As String) As ResumableSub
 	
@@ -372,51 +329,6 @@ Public Sub Login_EmailPassword(Email As String,Password As String) As ResumableS
 
 		#End If
 	
-End Sub
-Private Sub FillUserObject(User As PocketbaseUser,ResultMap As Map) As PocketbaseUser
-	If User.Error.Success Then
-		Dim mUser As Map = ResultMap.Get("user")
-		If mUser.IsInitialized = False And ResultMap.ContainsKey("record") Then mUser = ResultMap.Get("record")
-
-		If mUser.IsInitialized = False Then mUser = ResultMap
-
-		If mUser.ContainsKey("id") Then User.Id = mUser.Get("id")
-		If mUser.ContainsKey("email") Then User.email = mUser.Get("email")
-		If mUser.ContainsKey("verified") Then User.EmailConfirmed = mUser.Get("verified")
-		If mUser.ContainsKey("created") Then User.createdat = Pocketbase_Functions.ParseDateTime(mUser.Get("created"))
-		If mUser.ContainsKey("updated") Then User.createdat = Pocketbase_Functions.ParseDateTime(mUser.Get("updated"))
-		
-		'If mUser.ContainsKey("user_metadata") Then User.Metadata = mUser.Get("user_metadata")
-		If mUser.ContainsKey("is_anonymous") Then User.isAnonymous = mUser.Get("is_anonymous")
-
-		For Each k As String In mUser.Keys
-			
-			Select k
-				Case "id","email","verified","created","updated"
-					'Nothing to do
-				Case Else
-					If User.OptionalFields.IsInitialized = False Then User.OptionalFields.Initialize
-					User.OptionalFields.Put(k,mUser.Get(k))
-			End Select			
-		Next
-
-	End If
-
-	m_User = User
-
-	If User.Error.Success And ResultMap.ContainsKey("token") Then
-		Dim JWTMap As Map = Pocketbase_Functions.GetJWTPayload(ResultMap.Get("token"))
-		If ResultMap.ContainsKey("token") Then sti_Token.AccessToken = ResultMap.Get("token")
-		If JWTMap.ContainsKey("type") Then sti_Token.tokentype = JWTMap.Get("type")
-		If JWTMap.ContainsKey("exp") Then sti_Token.AccessExpiry = DateUtils.UnixTimeToTicks(JWTMap.Get("exp"))
-		sti_Token.Valid = True
-		sti_Token.Email = User.Email
-		sti_Token.Id = User.Id
-		If m_Pocketbase.LogEvents Then Log($"PocketbaseAuth: Token received. Expires: ${DateUtils.TicksToString(sti_Token.AccessExpiry)}"$)
-		SaveToken
-		AuthStateChange("signedIn")
-	End If
-	Return User
 End Sub
 
 'Allow your users to sign up without requiring users to enter an email address, password
@@ -494,6 +406,8 @@ Public Sub GetUser As ResumableSub
 	
 End Sub
 
+'Sends users password reset email request
+'On successful password reset all previously issued auth tokens for the specific record will be automatically invalidated
 '<code>
 '	wait for (xPocketbase.Auth.PasswordRecovery("test@example.com")) Complete (Response As PocketbaseError)
 '	If Response.Success Then
@@ -532,6 +446,15 @@ Public Sub RequestPasswordReset(Email As String) As ResumableSub
 	Return DatabaseError
 End Sub
 
+'Confirms the password reset with the verification token from the e-mail
+'<code>
+'	Wait For (xPocketbase.Auth.ConfirmPasswordReset("xxx","Test123!","Test123!")) Complete (Response As PocketbaseError)
+'	If Response.Success Then
+'		Log("Password change successfully")
+'	Else
+'		Log("Error: " & Response.ErrorMessage)
+'	End If
+'</code>
 Public Sub ConfirmPasswordReset(Token As String,NewPassword As String,NewPasswordConfirm As String) As ResumableSub
 	
 	Dim DatabaseError As PocketbaseError
@@ -562,7 +485,9 @@ Public Sub ConfirmPasswordReset(Token As String,NewPassword As String,NewPasswor
 	Return DatabaseError
 End Sub
 
+'Update a single users record
 'A full list of values you find in the dashboard in the “API Preview” in the “users” collection
+'<code>Wait For (xPocketbase.Auth.UpdateUser(CreateMap("name":"Test Name"))) Complete (Success As PocketbaseError)</code>
 Public Sub UpdateUser(Options As Map) As ResumableSub
 	
 	Dim DatabaseError As PocketbaseError
@@ -603,6 +528,8 @@ Public Sub UpdateUser(Options As Map) As ResumableSub
 	
 End Sub
 
+'Delete a single users record
+'<code>Wait For (xPocketbase.Auth.DeleteUser) Complete (Success As PocketbaseError)</code>
 Public Sub DeleteUser As ResumableSub
 	
 	Dim User As PocketbaseUser
@@ -612,20 +539,20 @@ Public Sub DeleteUser As ResumableSub
 	DatabaseError.Initialize
 	User.Error = DatabaseError
 	
-		Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
+	Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
 	
-		Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/records/${sti_Token.id}"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/records/${sti_Token.id}"$
 	
-		Dim j As HttpJob : j.Initialize("",Me)
-		j.Delete(url)
-		j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
-		
-		Wait For (j) JobDone(j As HttpJob)
+	Dim j As HttpJob : j.Initialize("",Me)
+	j.Delete(url)
+	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
+	
+	Wait For (j) JobDone(j As HttpJob)
 
-		DatabaseError.Success = j.Success
+	DatabaseError.Success = j.Success
 
-		If j.Success = False Then
-			DatabaseError.StatusCode = j.Response.StatusCode
+	If j.Success = False Then
+		DatabaseError.StatusCode = j.Response.StatusCode
 		DatabaseError.ErrorMessage = j.ErrorMessage
 	End If
 	
@@ -633,6 +560,16 @@ Public Sub DeleteUser As ResumableSub
 
 End Sub
 
+'Sends users email change request
+'On successful email change all previously issued auth tokens for the specific record will be automatically invalidated
+'<code>
+'	Wait For (xPocketbase.Auth.RequestEmailChange("test@example.com")) Complete (Success As PocketbaseError)
+'	If Success.Success Then
+'		Log("E-Mail change request sent")
+'	Else
+'		Log("Error: " & Success.ErrorMessage)
+'	End If
+'</code>
 Public Sub RequestEmailChange(NewEmail As String) As ResumableSub
 	
 	Dim DatabaseError As PocketbaseError
@@ -663,6 +600,15 @@ Public Sub RequestEmailChange(NewEmail As String) As ResumableSub
 	Return DatabaseError
 End Sub
 
+'Confirms the password reset with the verification token from the e-mail
+'<code>
+'	Wait For (xPocketbase.Auth.ConfirmEmailChange("xxx","Test123!")) Complete (Response As PocketbaseError)
+'	If Response.Success Then
+'		Log("E-Mail change successfully")
+'	Else
+'		Log("Error: " & Response.ErrorMessage)
+'	End If
+'</code>
 Public Sub ConfirmEmailChange(Token As String,Password As String) As ResumableSub
 	
 	Dim DatabaseError As PocketbaseError
@@ -692,6 +638,135 @@ Public Sub ConfirmEmailChange(Token As String,Password As String) As ResumableSu
 	
 	Return DatabaseError
 End Sub
+
+#End Region
+
+#Region ExternFunctions
+
+Public Sub SaveToken
+	Dim raf As RandomAccessFile
+	raf.Initialize(TokenFolder, TokenFile, False)
+	raf.WriteB4XObject(sti_Token, raf.CurrentPosition)
+	raf.Close
+End Sub
+
+Public Sub GetAccessToken As ResumableSub
+	If sti_Token.Valid = False Then
+		sti_Token.AccessToken = ""
+		SaveToken
+		If m_Pocketbase.LogEvents Then Log("PocketbaseAuth: User is logged out, this user must log in again")
+		AuthStateChange("signedOut")
+		'Authenticate
+		'RaiseEvent_Authenticate
+	Else If sti_Token.AccessExpiry < DateTime.Now Then
+		'GetTokenFromRefresh
+		'RaiseEvent_RefreshToken
+		Wait For (RefreshToken) Complete (Success As Boolean)
+		If Success = False Then
+			sti_Token.AccessToken = ""
+			SaveToken
+			If m_Pocketbase.LogEvents Then Log("PocketbaseAuth: Access token could not be renewed")
+			AuthStateChange("signedOut")
+		End If
+	Else
+		'RaiseEvent_AccessTokenAvailable(True)
+	End If
+	Return sti_Token.AccessToken
+End Sub
+
+Public Sub RefreshToken As ResumableSub
+	
+	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-refresh"$
+	
+	Dim j As HttpJob : j.Initialize("",Me)
+	j.PostString(url,"")
+	j.GetRequest.SetContentType("application/json")
+	j.GetRequest.SetHeader("Authorization","Bearer " & sti_Token.AccessToken)
+	
+	Wait For (j) JobDone(j As HttpJob)
+	
+	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	If j.Success Then
+		TokenInformationFromResponse(Pocketbase_Functions.GenerateResult(j))
+		AuthStateChange("tokenRefreshed")
+		Return True
+	Else
+		Return False
+	End If
+	
+End Sub
+
+#End Region
+
+#Region InternFunctions
+
+Private Sub TokenInformationFromResponse (m As Map)
+	
+	Dim ThisMap As Map = m.Get("record")
+	
+	If ThisMap.ContainsKey("exp") Then sti_Token.AccessExpiry = DateTime.Now + ThisMap.Get("exp") * 1000 - 5 * 60 * 1000
+	If m.ContainsKey("token") Then sti_Token.AccessToken = m.Get("token")
+	If ThisMap.ContainsKey("email") Then
+		sti_Token.Email = ThisMap.Get("email")
+	End If
+	If ThisMap.ContainsKey("id") Then
+		sti_Token.Id = ThisMap.Get("id")
+	End If
+	sti_Token.Valid = True
+	'If ThisMap.ContainsKey("tag") Then sti_Token.Tag = ThisMap.Get("tag")
+	
+	If m_Pocketbase.LogEvents Then Log($"PocketbaseAuth: Token received. Expires: ${DateUtils.TicksToString(sti_Token.AccessExpiry)}"$)
+	SaveToken
+	'RaiseEvent_AccessTokenAvailable(True)
+End Sub
+
+Private Sub FillUserObject(User As PocketbaseUser,ResultMap As Map) As PocketbaseUser
+	If User.Error.Success Then
+		Dim mUser As Map = ResultMap.Get("user")
+		If mUser.IsInitialized = False And ResultMap.ContainsKey("record") Then mUser = ResultMap.Get("record")
+
+		If mUser.IsInitialized = False Then mUser = ResultMap
+
+		If mUser.ContainsKey("id") Then User.Id = mUser.Get("id")
+		If mUser.ContainsKey("email") Then User.email = mUser.Get("email")
+		If mUser.ContainsKey("verified") Then User.EmailConfirmed = mUser.Get("verified")
+		If mUser.ContainsKey("created") Then User.createdat = Pocketbase_Functions.ParseDateTime(mUser.Get("created"))
+		If mUser.ContainsKey("updated") Then User.createdat = Pocketbase_Functions.ParseDateTime(mUser.Get("updated"))
+		
+		'If mUser.ContainsKey("user_metadata") Then User.Metadata = mUser.Get("user_metadata")
+		If mUser.ContainsKey("is_anonymous") Then User.isAnonymous = mUser.Get("is_anonymous")
+
+		For Each k As String In mUser.Keys
+			
+			Select k
+				Case "id","email","verified","created","updated"
+					'Nothing to do
+				Case Else
+					If User.OptionalFields.IsInitialized = False Then User.OptionalFields.Initialize
+					User.OptionalFields.Put(k,mUser.Get(k))
+			End Select
+		Next
+
+	End If
+
+	m_User = User
+
+	If User.Error.Success And ResultMap.ContainsKey("token") Then
+		Dim JWTMap As Map = Pocketbase_Functions.GetJWTPayload(ResultMap.Get("token"))
+		If ResultMap.ContainsKey("token") Then sti_Token.AccessToken = ResultMap.Get("token")
+		If JWTMap.ContainsKey("type") Then sti_Token.tokentype = JWTMap.Get("type")
+		If JWTMap.ContainsKey("exp") Then sti_Token.AccessExpiry = DateUtils.UnixTimeToTicks(JWTMap.Get("exp"))
+		sti_Token.Valid = True
+		sti_Token.Email = User.Email
+		sti_Token.Id = User.Id
+		If m_Pocketbase.LogEvents Then Log($"PocketbaseAuth: Token received. Expires: ${DateUtils.TicksToString(sti_Token.AccessExpiry)}"$)
+		SaveToken
+		AuthStateChange("signedIn")
+	End If
+	Return User
+End Sub
+
+#End Region
 
 #Region SocialLogin
 
