@@ -10,11 +10,13 @@ Sub Class_Globals
 	Private m_TableName As String
 	Private m_ColumnValue As Map
 	Private m_CustomParameters As String = ""
+	Private m_Files As List
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize(ThisPocketbase As Pocketbase)
 	m_Pocketbase = ThisPocketbase
+	m_Files.Initialize
 	
 End Sub
 
@@ -42,7 +44,12 @@ Public Sub Parameter_Fields(Fields As String) As Pocketbase_DatabaseUpdate
 	m_CustomParameters = m_CustomParameters & $"&fields=${Fields}"$
 	Return Me
 End Sub
-
+  
+ 
+Public Sub Parameter_Files(Files As List)
+	m_Files = Files
+End Sub
+  
 #End Region
 
 Public Sub Execute(RecordId As String) As ResumableSub
@@ -66,13 +73,24 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
 	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records/${RecordId}${m_CustomParameters}"$
 
-	Dim jsn As JSONGenerator
-	jsn.Initialize(m_ColumnValue)
+	Dim DataString As String = ""
+
+	If m_ColumnValue.IsInitialized And m_ColumnValue.Size > 0 Then
+		Dim jsn As JSONGenerator
+		jsn.Initialize(m_ColumnValue)
+		DataString = jsn.ToString
+	End If
 	'Log(jsn.ToString)
 	Log(url)
 	Dim j As HttpJob : j.Initialize("",Me)
-	j.PatchString(url,jsn.ToString)
-	j.GetRequest.SetContentType("application/json")
+	
+	If m_Files.Size = 0 Then
+		j.PatchString(url,DataString)
+		j.GetRequest.SetContentType("application/json")
+	Else		
+		Pocketbase_Functions.PatchMultipart(j,url,CreateMap("data":DataString),m_Files)
+'		j.PostMultipart(url,CreateMap("data":DataString),m_Files)
+	End If
 	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
 	
 	Wait For (j) JobDone(j As HttpJob)
@@ -92,3 +110,36 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	Return DatabaseResult
 	
 End Sub
+
+
+'Sub UploadFileToPocketBase(FilePath As String, FileName As String)
+'	Dim Http As HttpJob
+'	Http.Initialize("UploadFile", Me)
+'
+'	' API-URL für die Ziel-Collection (ersetze "my_collection" mit dem Namen deiner Collection)
+'	Dim url As String = "http://127.0.0.1:8090/api/collections/my_collection/records"
+'
+'	' Erstelle Multipart-Daten (Datei hochladen)
+'	Dim fileData As MultipartFileData
+'	fileData.Initialize
+'	fileData.Dir = File.DirRootExternal ' Oder ein anderer Pfad (z. B. File.DirInternal)
+'	fileData.FileName = FileName
+'	fileData.KeyName = "file" ' Name des File-Felds in der Collection
+'	fileData.ContentType = "application/octet-stream" ' Oder anderer MIME-Typ (z. B. "image/png")
+'
+'	' Optionale JSON-Daten (z. B. Task_Name hinzufügen)
+'	Dim jsonData As String = $"{
+'        "Task_Name": "Neuer Task",
+'        "Task_UserId": "86jzh49x5k2m387"
+'    }"$
+'    
+'	' Header setzen und Anfrage senden
+'	Dim data As Map
+'	data.Initialize
+'	data.Put("data", jsonData) ' JSON als weiteres Form-Feld senden
+'
+'	Http.PostMultipart(url, data, Array(fileData)) ' Datei & Daten senden
+'	Http.GetRequest.SetHeader("Authorization", "Bearer Dein_Api_Token") ' Falls Auth benötigt wird
+'
+'	Log("Datei-Upload gestartet...")
+'End Sub

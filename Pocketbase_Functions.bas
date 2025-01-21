@@ -9,6 +9,61 @@ Sub Process_Globals
 	
 End Sub
 
+Public Sub PatchMultipart(j As HttpJob,Link As String, NameValues As Map, Files As List)
+	Dim boundary As String = "---------------------------1461124740692"
+	Dim stream As OutputStream
+	stream.InitializeToBytesArray(0)
+	Dim b() As Byte
+	Dim eol As String = Chr(13) & Chr(10)
+	Dim empty As Boolean = True
+	If NameValues <> Null And NameValues.IsInitialized Then
+		For Each key As String In NameValues.Keys
+			Dim value As String = NameValues.Get(key)
+			empty = MultipartStartSection (stream, empty)
+			Dim s As String = _
+$"--${boundary}
+Content-Disposition: form-data; name="${key}"
+
+${value}"$
+			b = s.Replace(CRLF, eol).GetBytes("UTF8")
+			stream.WriteBytes(b, 0, b.Length)
+		Next
+	End If
+	If Files <> Null And Files.IsInitialized Then
+		For Each fd As MultipartFileData In Files
+			empty = MultipartStartSection (stream, empty)
+			Dim s As String = _
+$"--${boundary}
+Content-Disposition: form-data; name="${fd.KeyName}"; filename="${fd.FileName}"
+Content-Type: ${fd.ContentType}
+
+"$
+			b = s.Replace(CRLF, eol).GetBytes("UTF8")
+			stream.WriteBytes(b, 0, b.Length)
+			Dim in As InputStream = File.OpenInput(fd.Dir, fd.FileName)
+			File.Copy2(in, stream)
+		Next
+	End If
+	empty = MultipartStartSection (stream, empty)
+	s = _
+$"--${boundary}--
+"$
+	b = s.Replace(CRLF, eol).GetBytes("UTF8")
+	stream.WriteBytes(b, 0, b.Length)
+	j.PatchBytes(Link, stream.ToBytesArray)
+	j.GetRequest.SetContentType("multipart/form-data; boundary=" & boundary)
+	j.GetRequest.SetContentEncoding("UTF8")
+End Sub
+
+Private Sub MultipartStartSection (stream As OutputStream, empty As Boolean) As Boolean
+	If empty = False Then
+		stream.WriteBytes(Array As Byte(13, 10), 0, 2)
+	Else
+		empty = False
+	End If
+	Return empty
+End Sub
+
 Public Sub SubExists2(Target As Object,TargetSub As String,NumbersOfParameters As Int) As Boolean
 	#IF B4I
 	Return SubExists(Target,TargetSub,NumbersOfParameters)

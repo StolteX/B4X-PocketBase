@@ -13,7 +13,10 @@ Public Sub Initialize(ThisPocketbase As Pocketbase)
 	m_Pocketbase = ThisPocketbase
 End Sub
 
-
+'<code>
+'	Wait For (xPocketbase.Database.SelectData.Collection("dt_Task").GetList(0,2,"")) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'	xPocketbase.Database.PrintTable(DatabaseResult)
+'</code>
 Public Sub SelectData As Pocketbase_DatabaseSelect
 	
 	Dim DatabaseSelect As Pocketbase_DatabaseSelect
@@ -22,7 +25,13 @@ Public Sub SelectData As Pocketbase_DatabaseSelect
 	
 End Sub
 
-
+'<code>
+'	Dim Insert As Pocketbase_DatabaseInsert = xPocketbase.Database.InsertData.Collection("dt_Task")
+'	Insert.Parameter_Fields("Task_Name,Task_CompletedAt")
+'	Dim InsertMap As Map = CreateMap("Task_UserId":xPocketbase.Auth.TokenInformations.Id,"Task_Name":"Task 01","Task_CompletedAt":Pocketbase_Functions.GetISO8601UTC(DateTime.Now))
+'	Wait For (Insert.Insert(InsertMap).Execute) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'	xPocketbase.Database.PrintTable(DatabaseResult)
+'</code>
 Public Sub InsertData As Pocketbase_DatabaseInsert
 	
 	Dim DatabaseInsert As Pocketbase_DatabaseInsert
@@ -31,7 +40,13 @@ Public Sub InsertData As Pocketbase_DatabaseInsert
 	
 End Sub
 
-
+'<code>
+'	Dim UpdateRecord As Pocketbase_DatabaseUpdate = xPocketbase.Database.UpdateData.Collection("dt_Task")
+'	UpdateRecord.Parameter_Fields("Task_Name,Task_CompletedAt")
+'	UpdateRecord.Update(CreateMap("Task_Name":"Task 02"))
+'	Wait For (UpdateRecord.Execute("77avq8zn44ck37m")) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'	xPocketbase.Database.PrintTable(DatabaseResult)
+'</code>
 Public Sub UpdateData As Pocketbase_DatabaseUpdate
 	
 	Dim DatabaseUpdate As Pocketbase_DatabaseUpdate

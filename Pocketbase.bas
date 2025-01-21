@@ -18,16 +18,14 @@ Sub Class_Globals
 	
 	Type PocketbaseUser(Id As String,Email As String,isAnonymous As Boolean,EmailConfirmed As Boolean,CreatedAt As Long,UpdatedAt As Long,OptionalFields As Map,json As JSON,Error As PocketbaseError)
 	Type PocketbaseDatabaseResult(Tag As Object,Columns As Map,Rows As List,Error As PocketbaseError)
-	Type PocketbaseRpcResult(Tag As Object,Data As Object,Error As PocketbaseError)
-	Type PocketbaseStorageResult(Error As PocketbaseError)
+	'Type PocketbaseRpcResult(Tag As Object,Data As Object,Error As PocketbaseError)
 	Type PocketbaseError(Success As Boolean,StatusCode As Int,ErrorMessage As String,Data As Map)
 	
-	Type PocketbaseStorageBucket(Id As String,Name As String,isPublic As Boolean,FileSizeLimit As Int,AllowedMimeTypes As List,Owner As String,CreatedAt As Long,UpdatedAt As Long,Error As PocketbaseError)
-	Type PocketbaseStorageFile(Id As String,Key As String,FileBody() As Byte,PublicUrl As String,SignedURL As String,Error As PocketbaseError)
+	Type PocketbaseStorageFile(FileData As MultipartFileData,Error As PocketbaseError)
 	
-	Type PocketbaseRealtime_Data(Schema As String,CommitTimestamp As Long,Columns As List,Records As Map,OldRecord As Map,EventType As String,DatabaseError As PocketbaseError,Table As String)
-	Type PocketbaseRealtime_BroadcastData(Event As String,Payload As Map,DatabaseError As PocketbaseError)
-	Type PocketbaseRealtime_PresenceData(Event As String,Joins As Map,Leaves As Map,DatabaseError As PocketbaseError)
+	'Type PocketbaseRealtime_Data(Schema As String,CommitTimestamp As Long,Columns As List,Records As Map,OldRecord As Map,EventType As String,DatabaseError As PocketbaseError,Table As String)
+	'Type PocketbaseRealtime_BroadcastData(Event As String,Payload As Map,DatabaseError As PocketbaseError)
+	'Type PocketbaseRealtime_PresenceData(Event As String,Joins As Map,Leaves As Map,DatabaseError As PocketbaseError)
 	
 	Private m_Authentication As Pocketbase_Authentication
 	Private m_Database As Pocketbase_Database
