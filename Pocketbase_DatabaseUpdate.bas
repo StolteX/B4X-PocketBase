@@ -81,7 +81,7 @@ Public Sub Execute(RecordId As String) As ResumableSub
 		DataString = jsn.ToString
 	End If
 	'Log(jsn.ToString)
-	Log(url)
+	'Log(url)
 	Dim j As HttpJob : j.Initialize("",Me)
 	
 	If m_Files.Size = 0 Then
@@ -89,7 +89,6 @@ Public Sub Execute(RecordId As String) As ResumableSub
 		j.GetRequest.SetContentType("application/json")
 	Else		
 		Pocketbase_Functions.PatchMultipart(j,url,CreateMap("data":DataString),m_Files)
-'		j.PostMultipart(url,CreateMap("data":DataString),m_Files)
 	End If
 	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
 	

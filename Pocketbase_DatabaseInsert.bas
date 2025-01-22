@@ -10,12 +10,14 @@ Sub Class_Globals
 	Private m_TableName As String
 	Private m_lstColumnValue As List
 	Private m_CustomParameters As String = ""
+	Private m_Files As List
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize(ThisPocketbase As Pocketbase)
 	m_Pocketbase = ThisPocketbase
 	m_lstColumnValue.Initialize
+	m_Files.Initialize
 End Sub
 
 Public Sub Collection(TableName As String) As Pocketbase_DatabaseInsert
@@ -45,6 +47,10 @@ Public Sub Parameter_Fields(Fields As String) As Pocketbase_DatabaseInsert
 	Return Me
 End Sub
 
+Public Sub Parameter_Files(Files As List)
+	m_Files = Files
+End Sub
+
 #End Region
 
 Public Sub Execute As ResumableSub
@@ -68,13 +74,22 @@ Public Sub Execute As ResumableSub
 	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
 	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records${m_CustomParameters}"$
 		
+	Dim DataString As String = ""
+		
 	Dim jsn As JSONGenerator
 	jsn.Initialize2(m_lstColumnValue)
-	Dim InsertJson As String = jsn.ToString
+	DataString = jsn.ToString
+	DataString = DataString.SubString2(1,DataString.Length -1)
 
 	Dim j As HttpJob : j.Initialize("",Me)
-	j.PostString(url,InsertJson.SubString2(1,InsertJson.Length -1))
-	j.GetRequest.SetContentType("application/json")
+	
+	If m_Files.Size = 0 Then
+		j.PostString(url,DataString)
+		j.GetRequest.SetContentType("application/json")
+	Else
+		j.PostMultipart(url,CreateMap("data":DataString),m_Files)
+	End If
+	Log(url)
 	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
 	
 	Wait For (j) JobDone(j As HttpJob)

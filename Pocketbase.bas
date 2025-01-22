@@ -21,7 +21,7 @@ Sub Class_Globals
 	'Type PocketbaseRpcResult(Tag As Object,Data As Object,Error As PocketbaseError)
 	Type PocketbaseError(Success As Boolean,StatusCode As Int,ErrorMessage As String,Data As Map)
 	
-	Type PocketbaseStorageFile(FileData As MultipartFileData,Error As PocketbaseError)
+	Type PocketbaseStorageFile(FileBody() As Byte,Error As PocketbaseError)
 	
 	'Type PocketbaseRealtime_Data(Schema As String,CommitTimestamp As Long,Columns As List,Records As Map,OldRecord As Map,EventType As String,DatabaseError As PocketbaseError,Table As String)
 	'Type PocketbaseRealtime_BroadcastData(Event As String,Payload As Map,DatabaseError As PocketbaseError)

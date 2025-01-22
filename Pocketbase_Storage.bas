@@ -10,7 +10,7 @@ Sub Class_Globals
 	Type PocketbaseRangeDownloadTracker (CurrentLength As Long, TotalLength As Long, Completed As Boolean, Cancel As Boolean)
 	
 	Public Tag As Object
-
+	Private m_Thumb As String
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -18,24 +18,118 @@ Public Sub Initialize(ThisPocketbase As Pocketbase)
 	m_Pocketbase = ThisPocketbase
 End Sub
 
-'Uploads a file to an existing bucket.
+#Region Properties
+
+'If your file field has the Thumb sizes option, you can get a thumb of the image file (currently limited to jpg, png, and partially gif – its first frame)
+'The following thumb formats are currently supported:
+'WxH (e.g. 100x300) - crop To WxH viewbox (from center)
+'WxHt (e.g. 100x300t) - crop To WxH viewbox (from top)
+'WxHb (e.g. 100x300b) - crop To WxH viewbox (from bottom)
+'WxHf (e.g. 100x300f) - fit inside a WxH viewbox (without cropping)
+'0xH (e.g. 0x300) - resize To H height preserving the aspect ratio
+'Wx0 (e.g. 100x0) - resize To W width preserving the aspect ratio
 '<code>
-'	Dim UploadFile As Pocketbase_StorageFile = xPocketbase.Storage.UploadFile("Avatar","test.png")
-'	UploadFile.FileBody(xPocketbase.Storage.ConvertFile2Binary(File.DirAssets,"test.jpg"))
-'	Wait For (UploadFile.Execute) Complete (StorageFile As PocketbaseStorageFile)
-'	If StorageFile.Error.Success Then
-'		Log($"File ${"test.jpg"} successfully uploaded "$)
-'	Else
-'		Log("Error: " & StorageFile.Error.ErrorMessage)
-'	End If
+'	Dim GetFile As Pocketbase_Storage = xPocketbase.Storage
+'	GetFile.Parameter_Thumb("100x300")
+'	Wait For (GetFile.DownloadFile("dt_Task","s64f723suu7b1p4","test_76uuo6rx0u.jpg")) Complete (StorageFile As PocketbaseStorageFile)
+'</code>
+Public Sub Parameter_Thumb(Thumb As String) As Pocketbase_Storage
+	m_Thumb = Thumb
+	Return Me
+End Sub
+
+#End Region
+
+'Single file upload
+'<code>
+'	Dim FileData As MultipartFileData
+'	FileData.Initialize
+'	FileData.Dir = File.DirAssets
+'	FileData.FileName = "test.jpg"
+'	FileData.KeyName = "Task_Image"
+'	FileData.ContentType = "image/png"
+'
+'	Wait For (xPocketbase.Storage.UploadFile("dt_Task","s64f723suu7b1p4",FileData)) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'	xPocketbase.Database.PrintTable(DatabaseResult)
 '</code>
 Public Sub UploadFile(CollectionName As String,RecordId As String,FileData As MultipartFileData) As ResumableSub
 			
 	Dim UpdateRecord As Pocketbase_DatabaseUpdate = m_Pocketbase.Database.UpdateData.Collection(CollectionName)
-	'UpdateRecord.Parameter_Fields(FileData.KeyName)
 	UpdateRecord.Parameter_Files(Array(FileData))
 	Wait For (UpdateRecord.Execute(RecordId)) Complete (DatabaseResult As PocketbaseDatabaseResult)
 	Return DatabaseResult
+	
+End Sub
+
+'If your file field supports uploading multiple files
+'FileDate - List of MultipartFileData
+'<code>
+'	Dim lst_Files As List : lst_Files.Initialize
+'	lst_Files.Add(Pocketbase_Functions.CreateMultipartFileData(File.DirAssets,"test.jpg","Task_Image",""))
+'	lst_Files.Add(Pocketbase_Functions.CreateMultipartFileData(File.DirAssets,"test2.jpg","Task_Image",""))
+'
+'	Wait For (xPocketbase.Storage.UploadFiles("dt_Task","s64f723suu7b1p4",lst_Files)) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'	xPocketbase.Database.PrintTable(DatabaseResult)
+'</code>
+Public Sub UploadFiles(CollectionName As String,RecordId As String,FileData As List) As ResumableSub
+			
+	Dim UpdateRecord As Pocketbase_DatabaseUpdate = m_Pocketbase.Database.UpdateData.Collection(CollectionName)
+	UpdateRecord.Parameter_Files(FileData)
+	Wait For (UpdateRecord.Execute(RecordId)) Complete (DatabaseResult As PocketbaseDatabaseResult)
+	Return DatabaseResult
+	
+End Sub
+
+'<code>
+'	Wait For (xPocketbase.Storage.DownloadFile("dt_Task","s64f723suu7b1p4","test_76uuo6rx0u.jpg")) Complete (StorageFile As PocketbaseStorageFile)
+'	If StorageFile.Error.Success Then
+'		Log($"File ${"test.jpg"} successfully downloaded "$)
+'		ImageView1.SetBitmap(xPocketbase.Storage.BytesToImage(StorageFile.FileBody))
+'	Else
+'		Log("Error: " & StorageFile.Error.ErrorMessage)
+'	End If
+'</code>
+Public Sub DownloadFile(CollectionName As String,RecordId As String,FileName As String) As ResumableSub
+	
+	Dim StorageFile As PocketbaseStorageFile
+	StorageFile.Initialize
+	Dim DatabaseError As PocketbaseError
+	DatabaseError.Initialize
+	
+	Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
+	If AccessToken = "" Then
+		DatabaseError.StatusCode = 401
+		DatabaseError.ErrorMessage = "Unauthorized"
+		StorageFile.Error = DatabaseError
+		Return StorageFile
+	End If
+	
+	Dim url As String = ""
+	url = url & $"${m_Pocketbase.URL.Replace("collections","files")}/${CollectionName}/${RecordId}/${FileName}"$
+	If m_Thumb <> "" Then url = url & "?thumb=" & m_Thumb
+	
+	'Log(url)
+	
+	Dim j As HttpJob : j.Initialize("",Me)
+	j.Download(url)
+	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
+	
+	Wait For (j) JobDone(j As HttpJob)
+
+	DatabaseError.Success = j.Success
+
+	If j.Success Then
+			
+		StorageFile.FileBody = Bit.InputStreamToBytes(j.GetInputStream)
+			
+	Else
+		DatabaseError.StatusCode = j.Response.StatusCode
+		DatabaseError.ErrorMessage = j.ErrorMessage
+	End If
+
+	StorageFile.Error = DatabaseError
+	
+	Return StorageFile
 	
 End Sub
 
@@ -140,6 +234,8 @@ End Sub
 #End Region
 
 #Region Functions
+
+
 
 Public Sub ConvertFile2Binary(Dir As String, FileName As String) As Byte()
 	Return Bit.InputStreamToBytes(File.OpenInput(Dir, FileName))

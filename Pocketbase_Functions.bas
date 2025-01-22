@@ -88,6 +88,17 @@ Public Sub GetMimeTypeByExtension(Extension As String) As String
 	End Select
 End Sub
 
+'If you leave ContentType empty then the content type itself is determined using the file extension
+Public Sub CreateMultipartFileData(Dir As String,FileName As String,KeyName As String,ContentType As String) As MultipartFileData
+	Dim FileData As MultipartFileData
+	FileData.Initialize
+	FileData.Dir = Dir
+	FileData.FileName = FileName
+	FileData.KeyName = KeyName
+	FileData.ContentType = IIf(ContentType <> "",ContentType,GetMimeTypeByExtension(GetFileExt(FileName)))
+	Return FileData
+End Sub
+
 Public Sub GetFilename(fullpath As String) As String
 	Return fullpath.SubString(fullpath.LastIndexOf("/") + 1)
 End Sub
