@@ -78,7 +78,7 @@ End Sub
 #Region Events
 
 Private Sub Pocketbase_AuthStateChange(StateType As String)
-	If Pocketbase_Functions.SubExists2(mCallBack,mEventName & "_AuthStateChange",1) Then
+	If Pocketbase_InternFunctions.SubExists2(mCallBack,mEventName & "_AuthStateChange",1) Then
 		CallSub2(mCallBack,mEventName & "_AuthStateChange",StateType)
 	End If
 End Sub

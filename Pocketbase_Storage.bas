@@ -233,28 +233,3 @@ End Sub
 
 #End Region
 
-#Region Functions
-
-
-
-Public Sub ConvertFile2Binary(Dir As String, FileName As String) As Byte()
-	Return Bit.InputStreamToBytes(File.OpenInput(Dir, FileName))
-End Sub
-
-#If B4A OR B4I OR UI
-Public Sub BytesToImage(bytes() As Byte) As B4XBitmap
-	Dim In As InputStream
-	In.InitializeFromBytesArray(bytes, 0, bytes.Length)
-#if B4A or B4i
-   Dim bmp As Bitmap
-   bmp.Initialize2(In)
-   Return bmp
-#else
-	Dim bmp As Image
-	bmp.Initialize2(In)
-	Return bmp
-#end if
-End Sub
-
-#End Region
-#End If

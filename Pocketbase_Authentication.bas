@@ -159,7 +159,7 @@ Public Sub SignUp(Email As String,Password As String,PasswordConfirm As String,O
 	
 	Wait For (j) JobDone(j As HttpJob)
 
-	Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 
 
 	Dim User As PocketbaseUser
@@ -221,7 +221,7 @@ Public Sub RequestVerification(Email As String) As ResumableSub
 	
 	Wait For (j) JobDone(j As HttpJob)
 
-	Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 
 
 	Dim DatabaseError As PocketbaseError
@@ -265,7 +265,7 @@ Public Sub ConfirmVerification(VerificationToken As String) As ResumableSub
 	
 	Wait For (j) JobDone(j As HttpJob)
 
-	Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 
 
 	Dim DatabaseError As PocketbaseError
@@ -304,7 +304,7 @@ Public Sub Login_EmailPassword(Email As String,Password As String) As ResumableS
 	
 	Wait For (j) JobDone(j As HttpJob)
 
-	Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 
 	Dim User As PocketbaseUser
 	User.Initialize
@@ -395,7 +395,7 @@ Public Sub GetUser As ResumableSub
 			DatabaseError.ErrorMessage = j.ErrorMessage
 		End If
 
-		Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+		Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 	
 		m_User = FillUserObject(User,m_ResultMap)
 	
@@ -441,7 +441,7 @@ Public Sub RequestPasswordReset(Email As String) As ResumableSub
 		AuthStateChange("passwordResetRequested")
 	End If
 
-	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	'Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 	
 	Return DatabaseError
 End Sub
@@ -480,7 +480,7 @@ Public Sub ConfirmPasswordReset(Token As String,NewPassword As String,NewPasswor
 		AuthStateChange("passwordResetConfirmed")
 	End If
 
-	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	'Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 	
 	Return DatabaseError
 End Sub
@@ -521,8 +521,8 @@ Public Sub UpdateUser(Options As Map) As ResumableSub
 		AuthStateChange("userUpdated")
 	End If
 
-'	Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
-'	Log(Pocketbase_Functions.GenerateResult(j))
+'	Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
+'	Log(Pocketbase_InternFunctions.GenerateResult(j))
 	
 	Return DatabaseError
 	
@@ -595,7 +595,7 @@ Public Sub RequestEmailChange(NewEmail As String) As ResumableSub
 		AuthStateChange("emailChangeRequested")
 	End If
 
-	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	'Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 	
 	Return DatabaseError
 End Sub
@@ -634,7 +634,7 @@ Public Sub ConfirmEmailChange(Token As String,Password As String) As ResumableSu
 		AuthStateChange("emailChangeConfirmed")
 	End If
 
-	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	'Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 	
 	Return DatabaseError
 End Sub
@@ -685,9 +685,9 @@ Public Sub RefreshToken As ResumableSub
 	
 	Wait For (j) JobDone(j As HttpJob)
 	
-	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	'Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 	If j.Success Then
-		TokenInformationFromResponse(Pocketbase_Functions.GenerateResult(j))
+		TokenInformationFromResponse(Pocketbase_InternFunctions.GenerateResult(j))
 		AuthStateChange("tokenRefreshed")
 		Return True
 	Else
@@ -752,7 +752,7 @@ Private Sub FillUserObject(User As PocketbaseUser,ResultMap As Map) As Pocketbas
 	m_User = User
 
 	If User.Error.Success And ResultMap.ContainsKey("token") Then
-		Dim JWTMap As Map = Pocketbase_Functions.GetJWTPayload(ResultMap.Get("token"))
+		Dim JWTMap As Map = Pocketbase_InternFunctions.GetJWTPayload(ResultMap.Get("token"))
 		If ResultMap.ContainsKey("token") Then sti_Token.AccessToken = ResultMap.Get("token")
 		If JWTMap.ContainsKey("type") Then sti_Token.tokentype = JWTMap.Get("type")
 		If JWTMap.ContainsKey("exp") Then sti_Token.AccessExpiry = DateUtils.UnixTimeToTicks(JWTMap.Get("exp"))
@@ -848,7 +848,7 @@ End Sub
 #Region Events
 
 Private Sub AuthStateChange(StateType As String)
-	If Pocketbase_Functions.SubExists2(m_Pocketbase,mEventName & "_AuthStateChange",1) Then
+	If Pocketbase_InternFunctions.SubExists2(m_Pocketbase,mEventName & "_AuthStateChange",1) Then
 		CallSub2(m_Pocketbase,mEventName & "_AuthStateChange",StateType)
 	End If
 End Sub
@@ -1032,7 +1032,7 @@ End Sub
 '		
 '	Wait For (j) JobDone(j As HttpJob)
 '	If j.Success Then
-'		TokenInformationFromResponse(Pocketbase_Functions.GenerateResult(j))
+'		TokenInformationFromResponse(Pocketbase_InternFunctions.GenerateResult(j))
 '		CallSubDelayed2(Me,"OAuthTokenReceived",True)
 '	Else
 '		Logout
@@ -1055,7 +1055,7 @@ End Sub
 '	Wait For (j) JobDone(j As HttpJob)
 '	If j.Success Then
 '		
-'		Dim tmp_result As Map = Pocketbase_Functions.GenerateResult(j)
+'		Dim tmp_result As Map = Pocketbase_InternFunctions.GenerateResult(j)
 '		
 '		GetTokenFromPocketbase(tmp_result.Get("id_token"))
 '		

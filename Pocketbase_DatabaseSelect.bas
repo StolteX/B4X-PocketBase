@@ -181,7 +181,7 @@ Private Sub Execute(Parameters As String) As ResumableSub
 				
 			'Log(j.GetString)
 			
-			DatabaseResult = Pocketbase_Functions.CreateDatabaseResult(j.GetString)
+			DatabaseResult = Pocketbase_InternFunctions.CreateDatabaseResult(j.GetString)
 				
 		End If
 		
@@ -193,6 +193,6 @@ Private Sub Execute(Parameters As String) As ResumableSub
 	DatabaseResult.Error = DatabaseError
 	Return DatabaseResult
 
-	'Dim m_ResultMap As Map = Pocketbase_Functions.GenerateResult(j)
+	'Dim m_ResultMap As Map = Pocketbase_InternFunctions.GenerateResult(j)
 	
 End Sub

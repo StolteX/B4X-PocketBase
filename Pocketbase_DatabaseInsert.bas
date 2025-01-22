@@ -8,7 +8,7 @@ Sub Class_Globals
 	Private m_Pocketbase As Pocketbase
 	
 	Private m_TableName As String
-	Private m_lstColumnValue As List
+	Private m_ColumnValue As Map
 	Private m_CustomParameters As String = ""
 	Private m_Files As List
 End Sub
@@ -16,7 +16,6 @@ End Sub
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize(ThisPocketbase As Pocketbase)
 	m_Pocketbase = ThisPocketbase
-	m_lstColumnValue.Initialize
 	m_Files.Initialize
 End Sub
 
@@ -28,7 +27,7 @@ End Sub
 'Insert one row
 '<code>Dim InsertMap As Map = CreateMap("Tasks_Name":"Task 01","Tasks_Checked":True,"Tasks_CreatedAt":DateUtils.TicksToString(DateTime.Now))</code>
 Public Sub Insert(ColumnValue As Map) As Pocketbase_DatabaseInsert
-	m_lstColumnValue.Add(ColumnValue)
+	m_ColumnValue = ColumnValue
 	Return Me
 End Sub
 
@@ -73,21 +72,21 @@ Public Sub Execute As ResumableSub
 	Dim url As String = ""
 	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
 	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records${m_CustomParameters}"$
-		
-	Dim DataString As String = ""
-		
-	Dim jsn As JSONGenerator
-	jsn.Initialize2(m_lstColumnValue)
-	DataString = jsn.ToString
-	DataString = DataString.SubString2(1,DataString.Length -1)
 
 	Dim j As HttpJob : j.Initialize("",Me)
 	
 	If m_Files.Size = 0 Then
+		Dim DataString As String = ""
+
+		If m_ColumnValue.IsInitialized And m_ColumnValue.Size > 0 Then
+			Dim jsn As JSONGenerator
+			jsn.Initialize(m_ColumnValue)
+			DataString = jsn.ToString
+		End If
 		j.PostString(url,DataString)
 		j.GetRequest.SetContentType("application/json")
 	Else
-		j.PostMultipart(url,CreateMap("data":DataString),m_Files)
+		j.PostMultipart(url,m_ColumnValue,m_Files)
 	End If
 	Log(url)
 	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
@@ -98,7 +97,7 @@ Public Sub Execute As ResumableSub
 	'Log(j.GetString)
 	If j.Success Then
 			
-		DatabaseResult = Pocketbase_Functions.CreateDatabaseResult(j.GetString)
+		DatabaseResult = Pocketbase_InternFunctions.CreateDatabaseResult(j.GetString)
 			
 	Else
 		DatabaseError.StatusCode = j.Response.StatusCode

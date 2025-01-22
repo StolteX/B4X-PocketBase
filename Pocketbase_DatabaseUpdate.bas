@@ -73,24 +73,26 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
 	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records/${RecordId}${m_CustomParameters}"$
 
-	Dim DataString As String = ""
-
-	If m_ColumnValue.IsInitialized And m_ColumnValue.Size > 0 Then
-		Dim jsn As JSONGenerator
-		jsn.Initialize(m_ColumnValue)
-		DataString = jsn.ToString
-	End If
-	'Log(jsn.ToString)
-	'Log(url)
 	Dim j As HttpJob : j.Initialize("",Me)
 	
 	If m_Files.Size = 0 Then
+		
+		Dim DataString As String = ""
+
+		If m_ColumnValue.IsInitialized And m_ColumnValue.Size > 0 Then
+			Dim jsn As JSONGenerator
+			jsn.Initialize(m_ColumnValue)
+			DataString = jsn.ToString
+		End If
+		'Log(jsn.ToString)
+		'Log(url)
+		
 		j.PatchString(url,DataString)
 		j.GetRequest.SetContentType("application/json")
+		j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
 	Else		
-		Pocketbase_Functions.PatchMultipart(j,url,CreateMap("data":DataString),m_Files)
+		Pocketbase_InternFunctions.PatchMultipart(j,url,m_ColumnValue,m_Files)
 	End If
-	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
 	
 	Wait For (j) JobDone(j As HttpJob)
 
@@ -98,7 +100,7 @@ Public Sub Execute(RecordId As String) As ResumableSub
 
 	If j.Success Then
 			
-		DatabaseResult = Pocketbase_Functions.CreateDatabaseResult(j.GetString)
+		DatabaseResult = Pocketbase_InternFunctions.CreateDatabaseResult(j.GetString)
 			
 	Else
 		DatabaseError.StatusCode = j.Response.StatusCode
