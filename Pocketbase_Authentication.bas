@@ -23,7 +23,7 @@ Private Sub Class_Globals
 	
 '	Private CurrentClientId As String
 '	Private CurrentProvider As String
-'	Private packageName As String 'ignore
+	Private packageName As String 'ignore
 '	#if B4A
 '	Private LastIntent As Intent
 '	#end if
@@ -857,20 +857,20 @@ End Sub
 
 #Region OAuth
 
-'Private Sub GetPackageName As String
-'	#If B4A
-'	Return Application.PackageName
-'	#Else If B4I
-'	Dim no As NativeObject
-'	no = no.Initialize("NSBundle").RunMethod("mainBundle", Null)
-'	Dim name As Object = no.RunMethod("objectForInfoDictionaryKey:", Array("CFBundleIdentifier"))
-'	Return name
-'	#Else If B4J
-'	Dim joBA As JavaObject
-'	joBA.InitializeStatic("anywheresoftware.b4a.BA")
-'	Return joBA.GetField("packageName")
-'	#End If
-'End Sub
+Private Sub GetPackageName As String 'Ignore
+	#If B4A
+	Return Application.PackageName
+	#Else If B4I
+	Dim no As NativeObject
+	no = no.Initialize("NSBundle").RunMethod("mainBundle", Null)
+	Dim name As Object = no.RunMethod("objectForInfoDictionaryKey:", Array("CFBundleIdentifier"))
+	Return name
+	#Else If B4J
+	Dim joBA As JavaObject
+	joBA.InitializeStatic("anywheresoftware.b4a.BA")
+	Return joBA.GetField("packageName")
+	#End If
+End Sub
 '
 'Private Sub OAuth_Authenticate(ClientId As String,Provider As String,Scope As String)
 '	
