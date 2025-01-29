@@ -84,7 +84,7 @@ End Sub
 '	Wait For (xPocketbase.Storage.DownloadFile("dt_Task","s64f723suu7b1p4","test_76uuo6rx0u.jpg")) Complete (StorageFile As PocketbaseStorageFile)
 '	If StorageFile.Error.Success Then
 '		Log($"File ${"test.jpg"} successfully downloaded "$)
-'		ImageView1.SetBitmap(xPocketbase.Storage.BytesToImage(StorageFile.FileBody))
+'		ImageView1.SetBitmap(Pocketbase_Functions.BytesToImage(StorageFile.FileBody))
 '	Else
 '		Log("Error: " & StorageFile.Error.ErrorMessage)
 '	End If

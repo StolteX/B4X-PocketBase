@@ -31,6 +31,7 @@ Public Sub BytesToImage(bytes() As Byte) As B4XBitmap
 End Sub
 #End If
 
+'Returns the MIME type based on the file extension, categorizing images, videos, and audio formats. Logs a warning for unknown types
 'https://www.b4x.com/android/forum/threads/b4x-get-mime-type-by-extension.150330/
 Public Sub GetMimeTypeByExtension(Extension As String) As String
 	Extension = Extension.Replace(".","").ToLowerCase
@@ -47,6 +48,7 @@ Public Sub GetMimeTypeByExtension(Extension As String) As String
 	End Select
 End Sub
 
+'Creates a MultipartFileData object for file uploads, automatically determining the MIME type if ContentType is empty
 'If you leave ContentType empty then the content type itself is determined using the file extension
 Public Sub CreateMultipartFileData(Dir As String,FileName As String,KeyName As String,ContentType As String) As MultipartFileData
 	Dim FileData As MultipartFileData
@@ -99,12 +101,13 @@ Public Sub ParseDateTime(DateString As String) As Long
 	
 	DateTime.DateFormat = OldDateFormat
 	
-	Log(Result)   '1692729675569
-	Log(DateUtils.TicksToString(Result))
+	'Log(Result)   '1692729675569
+	'Log(DateUtils.TicksToString(Result))
 	
 	Return Result
 End Sub
 
+'Returns the file extension from a given filename, including the leading dot (.)
 Public Sub GetFileExt(FileName As String) As String
 	Return FileName.SubString2(FileName.LastIndexof("."), FileName.Length)
 End Sub

@@ -33,7 +33,7 @@ Public Sub GetFirstListItem(Filter As String, Expand As String) As ResumableSub
 End Sub
 
 ' Returns a list with all items batch fetched at once.
-'<code	Wait For (xPocketbase.Database.SelectData.Collection("dt_Task").GetFullList("-Task_Name")) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'<code>	Wait For (xPocketbase.Database.SelectData.Collection("dt_Task").GetFullList("-Task_Name")) Complete (DatabaseResult As PocketbaseDatabaseResult)
 '	xPocketbase.Database.PrintTable(DatabaseResult)</code>
 Public Sub GetFullList(Sort As String) As ResumableSub
 	Wait For (Execute($"?sort=${Sort}&perPage=10000"$)) complete (DatabaseResult As PocketbaseDatabaseResult)

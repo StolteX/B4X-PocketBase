@@ -8,6 +8,10 @@ Version=8.45
 Updates
 V1.00
 	-Release
+V1.01
+	-New some new descriptions for functions
+	-BugFixes for code snippets
+	-Change Login_EmailPassword renamed to AuthWithPassword
 #End IF
 
 #Event: AuthStateChange(StateType As String)

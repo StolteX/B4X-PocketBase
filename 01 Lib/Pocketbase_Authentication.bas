@@ -100,6 +100,14 @@ End Sub
 #Region Methods
 
 'User tokens and infos are removed from the device
+'<code>
+'	Wait For (xPocketbase.Auth.Logout) Complete (Result As PocketbaseError)
+'	If Result.Success Then
+'		Log("successfully logged out")
+'	Else
+'		Log("Error: " & Result.ErrorMessage)
+'	End If
+'</code>
 Public Sub Logout As ResumableSub
 	
 	Dim DatabaseError As PocketbaseError
@@ -284,14 +292,14 @@ End Sub
 
 'Authenticate with combination of email and password
 '<code>
-'	Wait For (xPocketbase.Auth.LogIn_EmailPassword("test@example.com","Test123!")) Complete (User As PocketbaseUser)
+'	Wait For (xPocketbase.Auth.AuthWithPassword("test@example.com","Test123!")) Complete (User As PocketbaseUser)
 '	If User.Error.Success Then
 '		Log("successfully logged in with " & User.Email)
 '	Else
 '		Log("Error: " & User.Error.ErrorMessage)
 '	End If
 '</code>
-Public Sub Login_EmailPassword(Email As String,Password As String) As ResumableSub
+Public Sub AuthWithPassword(Email As String,Password As String) As ResumableSub
 	
 	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-password"$
 	
@@ -409,7 +417,7 @@ End Sub
 'Sends users password reset email request
 'On successful password reset all previously issued auth tokens for the specific record will be automatically invalidated
 '<code>
-'	wait for (xPocketbase.Auth.PasswordRecovery("test@example.com")) Complete (Response As PocketbaseError)
+'	Wait for (xPocketbase.Auth.RequestPasswordReset("test@example.com")) Complete (Response As PocketbaseError)
 '	If Response.Success Then
 '		Log("Recovery email sent successfully")
 '	Else
@@ -529,7 +537,7 @@ Public Sub UpdateUser(Options As Map) As ResumableSub
 End Sub
 
 'Delete a single users record
-'<code>Wait For (xPocketbase.Auth.DeleteUser) Complete (Success As PocketbaseError)</code>
+'<code>Wait For (xPocketbase.Auth.DeleteUser) Complete (Result As PocketbaseError)</code>
 Public Sub DeleteUser As ResumableSub
 	
 	Dim User As PocketbaseUser
