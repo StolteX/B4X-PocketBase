@@ -80,6 +80,23 @@ Public Sub UploadFiles(CollectionName As String,RecordId As String,FileData As L
 	
 End Sub
 
+'To delete uploaded file(s)
+'<code>
+'	Wait For (xPocketbase.Storage.DeleteFiles("dt_Task","77avq8zn44ck37m","Task_Image",Array As String("test_l586xluw7q.jpg"))) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'	xPocketbase.Database.PrintTable(DatabaseResult)
+'</code>
+Public Sub DeleteFiles(CollectionName As String,RecordId As String,ColumnName As String,DocumentNames As List) As ResumableSub
+	
+	Dim UpdateRecord As Pocketbase_DatabaseUpdate = m_Pocketbase.Database.UpdateData.Collection(CollectionName)
+	Dim ColumnValue As Map
+	ColumnValue.Initialize
+	ColumnValue.Put(ColumnName & "-",DocumentNames)
+	UpdateRecord.Update(ColumnValue)
+	Wait For (UpdateRecord.Execute(RecordId)) Complete (DatabaseResult As PocketbaseDatabaseResult)
+	Return DatabaseResult
+	
+End Sub
+
 '<code>
 '	Wait For (xPocketbase.Storage.DownloadFile("dt_Task","s64f723suu7b1p4","test_76uuo6rx0u.jpg")) Complete (StorageFile As PocketbaseStorageFile)
 '	If StorageFile.Error.Success Then

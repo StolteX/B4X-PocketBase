@@ -12,6 +12,9 @@ V1.01
 	-New some new descriptions for functions
 	-BugFixes for code snippets
 	-Change Login_EmailPassword renamed to AuthWithPassword
+V1.02
+	-Storage
+		-New DeleteFiles - To delete uploaded file(s)
 #End IF
 
 #Event: AuthStateChange(StateType As String)
