@@ -7,10 +7,15 @@ Version=10
 Sub Class_Globals
 	Private m_Pocketbase As Pocketbase
 	
+	Private m_ApiEndpoint As String = "collections"
 	Private m_TableName As String
 	Private m_ColumnValue As Map
 	Private m_CustomParameters As String = ""
 	Private m_Files As List
+End Sub
+
+Private Sub SetApiEndpoint(EndpointName As String) 'Ignore
+	m_ApiEndpoint = EndpointName
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -71,7 +76,7 @@ Public Sub Execute As ResumableSub
 	
 	Dim url As String = ""
 	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
-	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records${m_CustomParameters}"$
+	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_TableName}/records${m_CustomParameters}"$
 
 	Dim j As HttpJob : j.Initialize("",Me)
 	

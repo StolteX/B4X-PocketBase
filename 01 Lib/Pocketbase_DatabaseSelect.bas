@@ -7,10 +7,14 @@ Version=10
 Sub Class_Globals
 	
 	Private m_Pocketbase As Pocketbase
-	
+	Private m_ApiEndpoint As String = "collections"
 	Private m_TableName As String
 	Private m_WhereList As List
 	Private m_CustomParameters As String = ""
+End Sub
+
+Private Sub SetApiEndpoint(EndpointName As String) 'Ignore
+	m_ApiEndpoint = EndpointName
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -158,9 +162,15 @@ Private Sub Execute(Parameters As String) As ResumableSub
 	End If
 
 	Dim url As String = ""
-	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records${Parameters}"$
+	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}"$
+	If m_TableName <> "" Then url = url & $"/records${Parameters}"$
+	If m_ApiEndpoint = "collections" Then
+		url = url & $"/records${Parameters}"$
+	Else
+		url = url & Parameters
+	End If
 
-	Log(url)
+	'Log(url)
 	Dim j As HttpJob : j.Initialize("",Me)
 	j.Download(url)
 	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)

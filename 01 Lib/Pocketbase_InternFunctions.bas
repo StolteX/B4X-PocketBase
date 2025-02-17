@@ -73,11 +73,21 @@ Public Sub SubExists2(Target As Object,TargetSub As String,NumbersOfParameters A
 	#End If
 End Sub
 
-Public Sub GetJWTPayload(Token As String) As Map
-	Dim su As StringUtils
+'https://www.b4x.com/android/forum/threads/b4x-get-jwt-payload-javawebtoken.165158/post-1012667
+Public Sub GetJWTPayload (Token As String) As Map
 	Dim parts() As String = Regex.Split("\.", Token)
-	Dim b() As Byte = su.DecodeBase64(IIf(parts(1).Contains("="),parts(1),parts(1) & "="))
-	Return BytesToString(b, 0, b.Length, "UTF-8").As(JSON).ToMap
+	Dim encoded As String = parts(1)
+	Select encoded.Length Mod 4
+		Case 2
+			encoded = encoded & "=="
+		Case 3
+			encoded = encoded & "="
+	End Select
+	Dim su As StringUtils
+	Dim b() As Byte = su.DecodeBase64(encoded)
+	Dim payload As String = BytesToString(b, 0, b.Length, "UTF-8")
+	Log(payload)
+	Return payload.As(JSON).ToMap
 End Sub
 
 Public Sub GenerateResult(j As HttpJob) As Map
@@ -130,38 +140,42 @@ Public Sub CreateDatabaseResult(JsonString As String) As PocketbaseDatabaseResul
 			
 	Dim FirstTime As Boolean = True
 			
-	Dim NewColjRoot As Map = jRoot.Get(0)
-	If NewColjRoot.ContainsKey("items") Then
-		jRoot = NewColjRoot.Get("items")
-	End If
+	If jRoot.Size > 0 Then
 			
-	For Each coljRoot As Map In jRoot
+		Dim NewColjRoot As Map = jRoot.Get(0)
+		If NewColjRoot.ContainsKey("items") Then
+			jRoot = NewColjRoot.Get("items")
+		End If
 			
-		Dim NewRow As Map
-		NewRow.Initialize
-		For Each k As String In coljRoot.Keys
-			If coljRoot.Get(k) Is Map Then
-				Dim JoinMap As Map = coljRoot.Get(k)
-				For Each join As String In JoinMap.Keys
-					If FirstTime = True Then DatabaseResult.Columns.Put(k & "." & join,"")
-					NewRow.Put(k & "." & join,JoinMap.Get(join))
-				Next
-			else if  coljRoot.Get(k) Is List Then
-				If FirstTime = True Then DatabaseResult.Columns.Put(k,"")
-				Dim gen As JSONGenerator
-				gen.Initialize2(coljRoot.Get(k))
-				NewRow.Put(k,gen.ToString)
-			Else
-				If FirstTime = True Then DatabaseResult.Columns.Put(k,"")
-				NewRow.Put(k,coljRoot.Get(k))
-			End If
+		For Each coljRoot As Map In jRoot
+			
+			Dim NewRow As Map
+			NewRow.Initialize
+			For Each k As String In coljRoot.Keys
+				If coljRoot.Get(k) Is Map Then
+					Dim JoinMap As Map = coljRoot.Get(k)
+					For Each join As String In JoinMap.Keys
+						If FirstTime = True Then DatabaseResult.Columns.Put(k & "." & join,"")
+						NewRow.Put(k & "." & join,JoinMap.Get(join))
+					Next
+				else if  coljRoot.Get(k) Is List Then
+					If FirstTime = True Then DatabaseResult.Columns.Put(k,"")
+					Dim gen As JSONGenerator
+					gen.Initialize2(coljRoot.Get(k))
+					NewRow.Put(k,gen.ToString)
+				Else
+					If FirstTime = True Then DatabaseResult.Columns.Put(k,"")
+					NewRow.Put(k,coljRoot.Get(k))
+				End If
 				
-		Next
+			Next
 
-		DatabaseResult.Rows.Add(NewRow)
+			DatabaseResult.Rows.Add(NewRow)
 				
-		FirstTime = False
-	Next
+			FirstTime = False
+		Next
+	
+	End If
 	
 	Return DatabaseResult
 	

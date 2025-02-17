@@ -7,7 +7,12 @@ Version=10
 Sub Class_Globals
 	Private m_Pocketbase As Pocketbase
 	
+	Private m_ApiEndpoint As String = "collections"
 	Private m_TableName As String
+End Sub
+
+Private Sub SetApiEndpoint(EndpointName As String) 'Ignore
+	m_ApiEndpoint = EndpointName
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -33,7 +38,7 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	End If
 	
 	Dim url As String = ""
-	url = url & $"${m_Pocketbase.URL}/${m_TableName}/records/${RecordId}"$
+	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_TableName}/records/${RecordId}"$
 
 	Dim j As HttpJob : j.Initialize("",Me)
 	j.Delete(url)

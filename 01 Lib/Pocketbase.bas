@@ -15,6 +15,15 @@ V1.01
 V1.02
 	-Storage
 		-New DeleteFiles - To delete uploaded file(s)
+V1.03 (nicht veröffentlicht)
+	-Pocketbase
+		-New Admin class
+			-Access to all admin features
+			-The user must be authenticated as a superuser in order to access it
+			-Useful to build your own admin tools with B4J or to work with jServer
+	-Admin
+		-New AuthWithPassword - This allows you to authenticate yourself as a superuser
+		-New Backups - List, create, edit or delete backups (CRUD)
 #End IF
 
 #Event: AuthStateChange(StateType As String)
@@ -37,6 +46,7 @@ Sub Class_Globals
 	Private m_Authentication As Pocketbase_Authentication
 	Private m_Database As Pocketbase_Database
 	Private m_Storage As Pocketbase_Storage
+	Private m_Admin As Pocketbase_Admin
 	
 	Private mEventName As String 'ignore
 	Private mCallBack As Object 'ignore
@@ -45,11 +55,12 @@ End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize(URL As String)
-	m_POCKETBASE_URL = URL & "/api/collections"
+	m_POCKETBASE_URL = URL & "/api"
 	
 	m_Authentication.Initialize(Me,"Pocketbase")
 	m_Database.Initialize(Me)
 	m_Storage.Initialize(Me)
+	m_Admin.Initialize(Me)
 
 End Sub
 
@@ -80,6 +91,11 @@ End Sub
 
 Public Sub getStorage As Pocketbase_Storage
 	Return m_Storage
+End Sub
+
+'Only superusers have access to these features
+Public Sub getAdmin As Pocketbase_Admin
+	Return m_Admin
 End Sub
 
 #Region Events

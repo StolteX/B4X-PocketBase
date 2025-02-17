@@ -7,6 +7,7 @@ Version=10
 Private Sub Class_Globals
 	Private xui As XUI
 	Private m_Pocketbase As Pocketbase
+	Private m_ApiEndpoint As String = "collections"
 	
 	Type PocketbaseTokenInformations (Id As String,AccessToken As String, AccessExpiry As Long, Valid As Boolean,TokenType As String,Email As String,Tag As Object)
 	Private sti_Token As PocketbaseTokenInformations
@@ -140,7 +141,7 @@ End Sub
 '</code>
 Public Sub SignUp(Email As String,Password As String,PasswordConfirm As String,Options As Map) As ResumableSub
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/records"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/records"$
 	
 	Dim m_Parameters As Map
 	m_Parameters.Initialize
@@ -212,7 +213,7 @@ End Sub
 '	End If
 '</code>
 Public Sub RequestVerification(Email As String) As ResumableSub
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/request-verification"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/request-verification"$
 	
 	Dim m_Parameters As Map
 	m_Parameters.Initialize
@@ -256,7 +257,7 @@ End Sub
 '	End If
 '</code>
 Public Sub ConfirmVerification(VerificationToken As String) As ResumableSub
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/confirm-verification"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/confirm-verification"$
 	
 	Dim m_Parameters As Map
 	m_Parameters.Initialize
@@ -301,8 +302,8 @@ End Sub
 '</code>
 Public Sub AuthWithPassword(Email As String,Password As String) As ResumableSub
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-password"$
-	
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/auth-with-password"$
+	Log(url)
 	Dim json As JSONGenerator
 	json.Initialize(CreateMap("identity":Email,"password":Password))
 	
@@ -388,7 +389,7 @@ Public Sub GetUser As ResumableSub
 	
 		Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
 	
-		Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/records/${sti_Token.id}"$
+		Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/records/${sti_Token.id}"$
 	
 		Dim j As HttpJob : j.Initialize("",Me)
 		j.Download(url)
@@ -429,7 +430,7 @@ Public Sub RequestPasswordReset(Email As String) As ResumableSub
 	Dim DatabaseError As PocketbaseError
 	DatabaseError.Initialize
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/request-password-reset"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/request-password-reset"$
 	
 	Dim json As JSONGenerator
 	json.Initialize(CreateMap("email":Email))
@@ -468,7 +469,7 @@ Public Sub ConfirmPasswordReset(Token As String,NewPassword As String,NewPasswor
 	Dim DatabaseError As PocketbaseError
 	DatabaseError.Initialize
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/confirm-password-reset"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/confirm-password-reset"$
 	
 	Dim json As JSONGenerator
 	json.Initialize(CreateMap("token":Token,"password":NewPassword,"passwordConfirm":NewPasswordConfirm))
@@ -508,7 +509,7 @@ Public Sub UpdateUser(Options As Map) As ResumableSub
 		Return DatabaseError
 	End If
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/records/${sti_Token.id}"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/records/${sti_Token.id}"$
 	
 	Dim json As JSONGenerator
 	json.Initialize(Options)
@@ -549,7 +550,7 @@ Public Sub DeleteUser As ResumableSub
 	
 	Wait For (m_Pocketbase.Auth.GetAccessToken) Complete (AccessToken As String)
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/records/${sti_Token.id}"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/records/${sti_Token.id}"$
 	
 	Dim j As HttpJob : j.Initialize("",Me)
 	j.Delete(url)
@@ -583,7 +584,7 @@ Public Sub RequestEmailChange(NewEmail As String) As ResumableSub
 	Dim DatabaseError As PocketbaseError
 	DatabaseError.Initialize
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/request-email-change"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/request-email-change"$
 	
 	Dim json As JSONGenerator
 	json.Initialize(CreateMap("newEmail":NewEmail))
@@ -622,7 +623,7 @@ Public Sub ConfirmEmailChange(Token As String,Password As String) As ResumableSu
 	Dim DatabaseError As PocketbaseError
 	DatabaseError.Initialize
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/confirm-email-change"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/confirm-email-change"$
 	
 	Dim json As JSONGenerator
 	json.Initialize(CreateMap("token":Token,"password":Password))
@@ -684,7 +685,7 @@ End Sub
 
 Public Sub RefreshToken As ResumableSub
 	
-	Dim url As String = $"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-refresh"$
+	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/auth-refresh"$
 	
 	Dim j As HttpJob : j.Initialize("",Me)
 	j.PostString(url,"")
@@ -894,7 +895,7 @@ End Sub
 '#End If
 '		
 '		If Provider = "google" Then
-'			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-oauth2"$, _
+'			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/auth-with-oauth2"$, _
 '         CreateMap("client_id": ClientId, _
 '        "redirectURL": GetRedirectUri, _
 '        "code": "code", _
@@ -902,12 +903,12 @@ End Sub
 '        "scope": Scope))
 '		Else
 '					
-'			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_UserCollectionName}/auth-with-oauth2"$, _
+'			Dim link As String = BuildLink($"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/auth-with-oauth2"$, _
 '         CreateMap("client_id": ClientId, _
-'        "redirectURL": $"${GetPackageName}://${m_Pocketbase.URL.Replace("https://","")}/auth/v1/callback"$, _
+'        "redirectURL": $"${GetPackageName}://${m_Pocketbase.URL.Replace("https://","")}/${m_ApiEndpoint}/auth/v1/callback"$, _
 '		 "code": "code", _
 '        "scope": Scope))
-'			'        '"redirectURL": $"com.stoltex.Pocketbase://${m_Pocketbase.URL.Replace("https://","")}/auth/v1/callback"$, _
+'			'        '"redirectURL": $"com.stoltex.Pocketbase://${m_Pocketbase.URL.Replace("https://","")}/${m_ApiEndpoint}/auth/v1/callback"$, _
 '	#if B4J
 '			PrepareServer
 '	#end if
@@ -1035,7 +1036,7 @@ End Sub
 '	json.Initialize(CreateMap("id_token":IdToken,"provider":CurrentProvider))
 '		
 '
-'	j.PostString($"${m_Pocketbase.URL}/auth/v1/token?grant_type=id_token"$, json.ToString)
+'	j.PostString($"${m_Pocketbase.URL}/${m_ApiEndpoint}/auth/v1/token?grant_type=id_token"$, json.ToString)
 '	j.GetRequest.SetContentType("application/json")
 '		
 '	Wait For (j) JobDone(j As HttpJob)

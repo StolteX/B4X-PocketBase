@@ -122,7 +122,7 @@ Public Sub DownloadFile(CollectionName As String,RecordId As String,FileName As 
 	End If
 	
 	Dim url As String = ""
-	url = url & $"${m_Pocketbase.URL.Replace("collections","files")}/${CollectionName}/${RecordId}/${FileName}"$
+	url = url & $"${m_Pocketbase.URL}/files/${CollectionName}/${RecordId}/${FileName}"$
 	If m_Thumb <> "" Then url = url & "?thumb=" & m_Thumb
 	
 	'Log(url)
