@@ -303,7 +303,7 @@ End Sub
 Public Sub AuthWithPassword(Email As String,Password As String) As ResumableSub
 	
 	Dim url As String = $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_UserCollectionName}/auth-with-password"$
-	Log(url)
+	'Log(url)
 	Dim json As JSONGenerator
 	json.Initialize(CreateMap("identity":Email,"password":Password))
 	

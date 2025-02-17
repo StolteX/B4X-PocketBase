@@ -38,7 +38,13 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	End If
 	
 	Dim url As String = ""
-	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_TableName}/records/${RecordId}"$
+	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}${m_TableName}"$
+	If m_ApiEndpoint = "collections" Then
+		url = url & $"/records/${RecordId}"$
+	Else
+		url = url & $"/${RecordId}"$
+	End If
+	'Log(url)
 
 	Dim j As HttpJob : j.Initialize("",Me)
 	j.Delete(url)
@@ -49,7 +55,7 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	DatabaseError.Success = j.Success
 
 	If j.Success Then
-			
+		DatabaseError.StatusCode = j.Response.StatusCode
 	Else
 		DatabaseError.StatusCode = j.Response.StatusCode
 		DatabaseError.ErrorMessage = j.ErrorMessage

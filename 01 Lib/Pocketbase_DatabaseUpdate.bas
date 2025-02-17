@@ -104,7 +104,7 @@ Public Sub Execute(RecordId As String) As ResumableSub
 	DatabaseError.Success = j.Success
 
 	If j.Success Then
-			
+		DatabaseError.StatusCode = j.Response.StatusCode
 		DatabaseResult = Pocketbase_InternFunctions.CreateDatabaseResult(j.GetString)
 			
 	Else

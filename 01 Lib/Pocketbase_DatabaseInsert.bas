@@ -76,8 +76,14 @@ Public Sub Execute As ResumableSub
 	
 	Dim url As String = ""
 	If m_CustomParameters.StartsWith("&") Then m_CustomParameters = "?" & m_CustomParameters.SubString(1)
-	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}/${m_TableName}/records${m_CustomParameters}"$
-
+	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}"$
+	If m_TableName <> "" Then url = url & $"/${m_TableName}"$
+	If m_ApiEndpoint = "collections" Then
+		url = url & $"/records${m_CustomParameters}"$
+	Else
+		url = url & m_CustomParameters
+	End If
+	'Log(url)
 	Dim j As HttpJob : j.Initialize("",Me)
 	
 	If m_Files.Size = 0 Then
@@ -93,7 +99,7 @@ Public Sub Execute As ResumableSub
 	Else
 		j.PostMultipart(url,m_ColumnValue,m_Files)
 	End If
-	Log(url)
+	'Log(url)
 	j.GetRequest.SetHeader("Authorization","Bearer " & AccessToken)
 	
 	Wait For (j) JobDone(j As HttpJob)
@@ -101,7 +107,7 @@ Public Sub Execute As ResumableSub
 	DatabaseError.Success = j.Success
 	'Log(j.GetString)
 	If j.Success Then
-			
+		DatabaseError.StatusCode = j.Response.StatusCode
 		DatabaseResult = Pocketbase_InternFunctions.CreateDatabaseResult(j.GetString)
 			
 	Else

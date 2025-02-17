@@ -13,6 +13,15 @@ Public Sub Initialize(ThisPocketbase As Pocketbase)
 	m_Pocketbase = ThisPocketbase
 End Sub
 
+'Authenticate as superuser
+'<code>
+'	Wait For (xPocketbase.Admin.AuthWithPassword("test@example.com","xxx")) Complete (User As PocketbaseUser) 'Superuser
+'	If User.Error.Success Then
+'		Log("successfully logged as superuser with " & User.Email)
+'	Else
+'		Log("Error: " & User.Error.ErrorMessage)
+'	End If
+'</code>
 Public Sub AuthWithPassword(Email As String,Password As String) As ResumableSub
 	
 	Dim AdminRequest As Pocketbase_Authentication = m_Pocketbase.Auth

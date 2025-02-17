@@ -6,11 +6,16 @@ Version=10
 @EndOfDesignText@
 Sub Class_Globals
 	Private m_Pocketbase As Pocketbase
+	Private m_ApiEndpoint As String = "collections"
 	
 	Type PocketbaseRangeDownloadTracker (CurrentLength As Long, TotalLength As Long, Completed As Boolean, Cancel As Boolean)
 	
 	Public Tag As Object
 	Private m_Thumb As String
+End Sub
+
+Private Sub SetApiEndpoint(EndpointName As String) 'Ignore
+	m_ApiEndpoint = EndpointName
 End Sub
 
 'Initializes the object. You can add parameters to this method if needed.
@@ -122,7 +127,13 @@ Public Sub DownloadFile(CollectionName As String,RecordId As String,FileName As 
 	End If
 	
 	Dim url As String = ""
-	url = url & $"${m_Pocketbase.URL}/files/${CollectionName}/${RecordId}/${FileName}"$
+	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}"$
+	If m_ApiEndpoint = "collections" Then
+		url = url & $"/files/${CollectionName}/${RecordId}/${FileName}"$
+	Else
+		url = url & $"/${FileName}?${RecordId}"$
+	End If
+	'Log(url)
 	If m_Thumb <> "" Then url = url & "?thumb=" & m_Thumb
 	
 	'Log(url)
@@ -147,6 +158,22 @@ Public Sub DownloadFile(CollectionName As String,RecordId As String,FileName As 
 	StorageFile.Error = DatabaseError
 	
 	Return StorageFile
+	
+End Sub
+
+'Generates a short-lived file token for accessing protected file(s).
+'The client must be superuser or auth record authenticated (aka. have regular authorization token sent with the request).
+'<code>
+'	Wait For (xPocketbase.Storage.GetToken) Complete (DatabaseResult As PocketbaseDatabaseResult)
+'	xPocketbase.Database.PrintTable(DatabaseResult)
+'</code>
+Public Sub GetToken As ResumableSub
+	
+	Dim AdminRequest As Pocketbase_DatabaseInsert = m_Pocketbase.Database.InsertData.Collection("token")
+	CallSub2(AdminRequest,"SetApiEndpoint","files")
+	
+	Wait For (AdminRequest.Insert(CreateMap()).Execute) Complete (DatabaseResult As PocketbaseDatabaseResult)
+	Return DatabaseResult
 	
 End Sub
 

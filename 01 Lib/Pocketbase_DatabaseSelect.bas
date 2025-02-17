@@ -187,10 +187,11 @@ Private Sub Execute(Parameters As String) As ResumableSub
 '			DatabaseError.Success = False
 '			DatabaseError.StatusCode = 401
 '			DatabaseError.ErrorMessage = "User not Authenticated or check your RLS policy!"
+			DatabaseError.StatusCode = j.Response.StatusCode
 		Else
 				
 			'Log(j.GetString)
-			
+			DatabaseError.StatusCode = j.Response.StatusCode
 			DatabaseResult = Pocketbase_InternFunctions.CreateDatabaseResult(j.GetString)
 				
 		End If

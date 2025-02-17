@@ -15,7 +15,8 @@ V1.01
 V1.02
 	-Storage
 		-New DeleteFiles - To delete uploaded file(s)
-V1.03 (nicht veröffentlicht)
+V1.03
+	-BugFixes and Improvements
 	-Pocketbase
 		-New Admin class
 			-Access to all admin features
@@ -23,7 +24,10 @@ V1.03 (nicht veröffentlicht)
 			-Useful to build your own admin tools with B4J or to work with jServer
 	-Admin
 		-New AuthWithPassword - This allows you to authenticate yourself as a superuser
-		-New Backups - List, create, edit or delete backups (CRUD)
+		-New Backups - List, create, edit, delete and download backups (CRUD)
+	-Storage
+		-New GetToken - Generates a short-lived file token for accessing protected file(s)
+			-The client must be superuser or auth record authenticated (aka. have regular authorization token sent with the request)
 #End IF
 
 #Event: AuthStateChange(StateType As String)
