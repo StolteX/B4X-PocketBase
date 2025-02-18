@@ -75,7 +75,7 @@ End Sub
 
 'Only for GetCustom
 'Specify the max returned records per page (default to 30).
-'<code>CustomQuery.Parameter_PerPage(4)</CustomQuery.Parameter_PerPage(4)>
+'<code>CustomQuery.Parameter_PerPage(4)</code>
 Public Sub Parameter_PerPage(perPage As Int) As Pocketbase_DatabaseSelect
 	m_CustomParameters = m_CustomParameters & $"&perPage=${perPage}"$
 	Return Me
@@ -168,6 +168,10 @@ Private Sub Execute(Parameters As String) As ResumableSub
 		url = url & $"/records${Parameters}"$
 	Else
 		url = url & Parameters
+		If m_CustomParameters <> "" Then
+			If m_CustomParameters.StartsWith("&") Then m_CustomParameters = m_CustomParameters.SubString(1)
+			url = url & IIf(url.Contains("?"),"&", "?") & m_CustomParameters
+		End If
 	End If
 
 	'Log(url)

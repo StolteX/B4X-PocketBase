@@ -18,6 +18,10 @@ Private Sub SetApiEndpoint(EndpointName As String) 'Ignore
 	m_ApiEndpoint = EndpointName
 End Sub
 
+Private Sub SetCustomParameters(CustomParameter As String) 'Ignore
+	m_CustomParameters = CustomParameter
+End Sub
+
 'Initializes the object. You can add parameters to this method if needed.
 Public Sub Initialize(ThisPocketbase As Pocketbase)
 	m_Pocketbase = ThisPocketbase

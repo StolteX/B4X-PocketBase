@@ -28,6 +28,12 @@ V1.03
 	-Storage
 		-New GetToken - Generates a short-lived file token for accessing protected file(s)
 			-The client must be superuser or auth record authenticated (aka. have regular authorization token sent with the request)
+V1.04 (nicht veröffentlicht)
+	-Pocketbase
+		-New GetHealth - Returns the health status of the server
+	-Admin
+		-New Crons - List and execute cron jobs
+		-New Logs - List, view and get statistics of the logs
 #End IF
 
 #Event: AuthStateChange(StateType As String)
@@ -42,6 +48,8 @@ Sub Class_Globals
 	Type PocketbaseError(Success As Boolean,StatusCode As Int,ErrorMessage As String,Data As Map)
 	
 	Type PocketbaseStorageFile(FileBody() As Byte,Error As PocketbaseError)
+	
+	Type PocketbaseHealthStatus(Status As Int,Message As String,Data As Map)
 	
 	'Type PocketbaseRealtime_Data(Schema As String,CommitTimestamp As Long,Columns As List,Records As Map,OldRecord As Map,EventType As String,DatabaseError As PocketbaseError,Table As String)
 	'Type PocketbaseRealtime_BroadcastData(Event As String,Payload As Map,DatabaseError As PocketbaseError)
@@ -100,6 +108,42 @@ End Sub
 'Only superusers have access to these features
 Public Sub getAdmin As Pocketbase_Admin
 	Return m_Admin
+End Sub
+
+'Returns the health status of the server
+'<code>
+'	Wait For (xPocketbase.GetHealth) Complete (Status As PocketbaseHealthStatus)
+'	Log(Status.Status)
+'	Log(Status.Message)
+'</code>
+Public Sub GetHealth As ResumableSub
+	
+	Dim Health As PocketbaseHealthStatus
+	Health.Initialize
+	
+	Dim job As HttpJob
+	job.Initialize("HealthCheck", Me)
+	job.Download($"${m_POCKETBASE_URL}/health"$)
+	Wait For (job) JobDone(job As HttpJob)
+    
+	If job.Success Then
+		
+		Dim json As JSONParser
+		json.Initialize(job.GetString)
+		Dim jRoot As Map = json.NextObject
+		Health.Status = jRoot.Get("code")
+		Health.Data = jRoot.Get("data")
+		Health.Message = jRoot.Get("message")
+
+	Else
+		Health.Message = job.ErrorMessage
+		Health.Status = job.Response.StatusCode
+	End If
+    
+	job.Release
+	
+	Return Health
+	
 End Sub
 
 #Region Events

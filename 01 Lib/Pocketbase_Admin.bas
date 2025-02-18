@@ -31,6 +31,7 @@ Public Sub AuthWithPassword(Email As String,Password As String) As ResumableSub
 	
 End Sub
 
+'<code>https://pocketbase.io/docs/api-backups/</code>
 Public Sub Backups As Pocketbase_AdminBackups
 	
 	Dim AdminBackups As Pocketbase_AdminBackups
@@ -38,3 +39,23 @@ Public Sub Backups As Pocketbase_AdminBackups
 	Return AdminBackups
 	
 End Sub
+
+'<code>https://pocketbase.io/docs/api-crons/</code>
+Public Sub Crons As Pocketbase_AdminCrons
+	
+	Dim AdminCrons As Pocketbase_AdminCrons
+	AdminCrons.Initialize(m_Pocketbase)
+	Return AdminCrons
+	
+End Sub
+
+
+'<code>https://pocketbase.io/docs/api-logs/</code>
+Public Sub Logs As Pocketbase_AdminLogs
+	
+	Dim AdminLogs As Pocketbase_AdminLogs
+	AdminLogs.Initialize(m_Pocketbase)
+	Return AdminLogs
+	
+End Sub
+
