@@ -28,7 +28,7 @@ V1.03
 	-Storage
 		-New GetToken - Generates a short-lived file token for accessing protected file(s)
 			-The client must be superuser or auth record authenticated (aka. have regular authorization token sent with the request)
-V1.04 (nicht veröffentlicht)
+V1.04
 	-Pocketbase
 		-New GetHealth - Returns the health status of the server
 	-Admin
