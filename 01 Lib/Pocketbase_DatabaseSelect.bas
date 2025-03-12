@@ -163,9 +163,9 @@ Private Sub Execute(Parameters As String) As ResumableSub
 
 	Dim url As String = ""
 	url = url & $"${m_Pocketbase.URL}/${m_ApiEndpoint}"$
-	If m_TableName <> "" Then url = url & $"/records${Parameters}"$
+	If m_TableName <> "" Then url = url & $"/${m_TableName}/records${Parameters}"$
 	If m_ApiEndpoint = "collections" Then
-		url = url & $"/records${Parameters}"$
+		'url = url & $"/records${Parameters}"$
 	Else
 		url = url & Parameters
 		If m_CustomParameters <> "" Then

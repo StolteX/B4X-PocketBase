@@ -34,6 +34,9 @@ V1.04
 	-Admin
 		-New Crons - List and execute cron jobs
 		-New Logs - List, view and get statistics of the logs
+V1.05
+	-Database
+		-BugFixes
 #End IF
 
 #Event: AuthStateChange(StateType As String)
